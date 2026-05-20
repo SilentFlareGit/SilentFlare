@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 
 app = FastAPI(title="SilentFlare Blog API")
@@ -42,12 +43,44 @@ MOCK_POSTS = [
 ]
 
 
-@app.get("/api/v1/health")
+class HealthResponse(BaseModel):
+    status: str
+
+
+class PostListItem(BaseModel):
+    id: int
+    title: str
+    slug: str
+    summary: str
+    cover_url: str
+    category: str
+    tags: list[str]
+    published_at: str
+
+
+class PostListResponse(BaseModel):
+    items: list[PostListItem]
+    total: int
+
+
+class PostDetailResponse(BaseModel):
+    id: int
+    title: str
+    slug: str
+    summary: str
+    content_markdown: str
+    cover_url: str
+    category: str
+    tags: list[str]
+    published_at: str
+
+
+@app.get("/api/v1/health", response_model=HealthResponse)
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/api/v1/posts")
+@app.get("/api/v1/posts", response_model=PostListResponse)
 def list_posts() -> dict[str, object]:
     items = [
         {
@@ -66,7 +99,7 @@ def list_posts() -> dict[str, object]:
     return {"items": items, "total": len(items)}
 
 
-@app.get("/api/v1/posts/{slug}")
+@app.get("/api/v1/posts/{slug}", response_model=PostDetailResponse)
 def get_post(slug: str) -> dict[str, object]:
     for post in MOCK_POSTS:
         if post["slug"] == slug:
