@@ -12,9 +12,31 @@
   let resultPannel: HTMLDivElement;
   let searchBar: HTMLDivElement;
 
-  let search = (keyword: string) => {};
+  const search = async (keyword: string) => {
+    if (typeof window === "undefined" || typeof pagefind === "undefined") return;
+    let searchResultArr = [];
 
-  onMount(async () => {
+    // @ts-ignore
+    const ret = await pagefind.search(keyword);
+    for (const item of ret.results) {
+      searchResultArr.push(await item.data());
+    }
+    searchResult = searchResultArr;
+
+    const searchResultVisable = keyword != "" && searchResult.length != 0;
+
+    if (resultPannel) {
+      if (searchResultVisable) {
+        resultPannel.style.height = `${searchResultArr.length * 84 + 16}px`;
+        resultPannel.style.opacity = "100%";
+      } else {
+        resultPannel.style.height = "0px";
+        resultPannel.style.opacity = "0";
+      }
+    }
+  };
+
+  onMount(() => {
     // setup overlay scrollbars
     OverlayScrollbars(resultPannel, {
       scrollbars: {
@@ -23,45 +45,25 @@
       },
     });
 
-    /**
-     * Asynchronously performs a search based on the provided keyword.
-     * If in development mode, extracts a subset of mock results for demonstration.
-     * Otherwise, fetches results from the Pagefind search engine and populates the array.
-     * Toggles the visibility and height of the results panel based on the outcome.
-     */
-    search = async (keyword: string) => {
-      let searchResultArr = [];
-
-      // @ts-ignore
-      const ret = await pagefind.search(keyword);
-      for (const item of ret.results) {
-        searchResultArr.push(await item.data());
-      }
-      searchResult = searchResultArr;
-
-      const searchResultVisable = keyword != "" && searchResult.length != 0;
-
-      if (searchResultVisable) {
-        resultPannel.style.height = `${searchResultArr.length * 84 + 16}px`;
-        resultPannel.style.opacity = "100%";
-      } else {
-        resultPannel.style.height = "0px";
-        resultPannel.style.opacity = "0";
+    // handle click outside to closed result pannel
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (resultPannel && searchBar) {
+        if (
+          !resultPannel.contains(event.target as any) &&
+          !searchBar.contains(event.target as any)
+        ) {
+          searchKeyword = "";
+          search("");
+        }
       }
     };
-  });
 
-  // handle click outside to closed result pannel
-  document.addEventListener("click", (event) => {
-    if (
-      !resultPannel.contains(event.target as any) &&
-      !searchBar.contains(event.target as any)
-    ) {
-      search("");
-    }
-  });
+    document.addEventListener("click", handleOutsideClick);
 
-  $: search(searchKeyword);
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  });
 </script>
 
 <!-- search bar -->
@@ -79,6 +81,7 @@
       placeholder={i18n(I18nKeys.nav_bar_search_placeholder)}
       type="text"
       autocomplete="off"
+      on:input={(e) => search((e.target as HTMLInputElement).value)}
       on:focus={() => {
         search(searchKeyword);
       }}

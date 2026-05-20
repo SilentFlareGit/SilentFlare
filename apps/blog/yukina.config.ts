@@ -2,13 +2,13 @@ import I18nKeys from "./src/locales/keys";
 import type { Configuration } from "./src/types/config";
 
 const YukinaConfig: Configuration = {
-  title: "Yukina",
-  subTitle: "Yukina Template Demo Site",
-  brandTitle: "Yukina",
+  title: "SilentFlare",
+  subTitle: "Thoughts, insights, and developments on SilentFlare",
+  brandTitle: "SilentFlare",
 
-  description: "Demo Site",
+  description: "Official blog of SilentFlare - exploring software, design, and architecture.",
 
-  site: "https://yukina-blog.vercel.app",
+  site: "https://blog.silentflare.com",
 
   locale: "en", // set for website language and date format
 
@@ -27,25 +27,25 @@ const YukinaConfig: Configuration = {
     },
     {
       nameKey: I18nKeys.nav_bar_github,
-      href: "https://github.com/WhitePaper233/yukina",
+      href: "https://github.com/silentflare",
     },
   ],
 
-  username: "WhitePaper 白芷",
-  sign: "Ad Astra Per Aspera.",
-  avatarUrl: "https://s2.loli.net/2025/01/25/FPpTrQSezM8ivbl.webp",
+  username: "SilentFlare",
+  sign: "Igniting ideas silently, building solutions loudly.",
+  avatarUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
   socialLinks: [
     {
       icon: "line-md:github-loop",
-      link: "https://github.com/WhitePaper233",
+      link: "https://github.com/silentflare",
     },
     {
-      icon: "mingcute:bilibili-line",
-      link: "https://space.bilibili.com/22433608",
+      icon: "line-md:twitter",
+      link: "https://x.com/silentflare",
     },
     {
-      icon: "mingcute:netease-music-line",
-      link: "https://music.163.com/#/user/home?id=125291648",
+      icon: "line-md:email",
+      link: "mailto:contact@silentflare.com",
     },
   ],
   maxSidebarCategoryChip: 6, // It is recommended to set it to a common multiple of 2 and 3
