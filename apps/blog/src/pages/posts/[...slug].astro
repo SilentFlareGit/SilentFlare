@@ -3,17 +3,58 @@ import { getCollection } from "astro:content";
 import { IdToSlug } from "../../utils/hash";
 import PostLayout from "../../layouts/PostLayout.astro";
 import { render } from "astro:content";
+import { fetchApiPosts, fetchApiPostBySlug, renderMarkdown } from "../../utils/api";
 
 export async function getStaticPaths() {
   const postEntries = await getCollection("posts");
-  return postEntries.map((entry) => ({
+  const localPaths = postEntries.map((entry) => ({
     params: { slug: IdToSlug(entry.id) },
-    props: { entry },
+    props: { entry, isApi: false, contentHtml: "" },
   }));
+
+  const apiPosts = await fetchApiPosts();
+  const apiPaths = [];
+  for (const post of apiPosts) {
+    const fullPost = await fetchApiPostBySlug(post.slug);
+    if (fullPost) {
+      // Map API post to match entry structure
+      const mappedEntry = {
+        id: fullPost.slug,
+        slug: fullPost.slug,
+        data: {
+          title: fullPost.title,
+          published: new Date(fullPost.published_at),
+          category: fullPost.category,
+          tags: fullPost.tags,
+          description: fullPost.summary,
+          cover: fullPost.cover_url,
+          author: "SilentFlare",
+          licenseName: undefined,
+          licenseUrl: undefined,
+          sourceLink: undefined,
+        }
+      };
+      apiPaths.push({
+        params: { slug: fullPost.slug },
+        props: {
+          entry: mappedEntry,
+          isApi: true,
+          contentHtml: renderMarkdown(fullPost.content_markdown || ""),
+        },
+      });
+    }
+  }
+
+  return [...localPaths, ...apiPaths];
 }
 
-const { entry } = Astro.props;
-const { Content } = await render(entry);
+const { entry, isApi, contentHtml } = Astro.props;
+
+let Content = null;
+if (!isApi) {
+  const rendered = await render(entry);
+  Content = rendered.Content;
+}
 ---
 
 {
@@ -33,7 +74,11 @@ const { Content } = await render(entry);
         {entry.data.title}
       </div>
       <div data-pagefind-body>
-        <Content />
+        {isApi ? (
+          <Fragment set:html={contentHtml} />
+        ) : (
+          Content && <Content />
+        )}
       </div>
     </PostLayout>
   )
@@ -58,9 +103,12 @@ const { Content } = await render(entry);
         {entry.data.title}
       </div>
       <div data-pagefind-body>
-        <Content />
+        {isApi ? (
+          <Fragment set:html={contentHtml} />
+        ) : (
+          Content && <Content />
+        )}
       </div>
     </PostLayout>
   )
 }
-<!-- <Fragment set:html={tocHTMLString} /> -->

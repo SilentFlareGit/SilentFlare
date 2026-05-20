@@ -29,6 +29,7 @@ const { page } = Astro.props;
           >
             <PostCard
               id={entry.id}
+              isApi={(entry as any).isApi}
               title={entry.data.title}
               published={entry.data.published}
               category={entry.data.category}

@@ -1,5 +1,6 @@
 import { getCollection } from "astro:content";
 import { IdToSlug } from "./hash";
+import { fetchApiPosts } from "./api";
 
 /**
  * Represents an archive item with a title, slug, date, and optional tags.
@@ -42,7 +43,42 @@ export async function GetSortedPosts() {
   const allBlogPosts = await getCollection("posts", ({ data }) => {
     return import.meta.env.PROD ? data.draft !== true : true;
   });
-  const sorted = allBlogPosts.sort((a, b) => {
+
+  // Map local posts to ensure they have the proper slug and matches API structure
+  const mappedLocalPosts = allBlogPosts.map(post => ({
+    ...post,
+    slug: (post as any).slug || IdToSlug(post.id),
+  }));
+
+  // Fetch API posts
+  const apiPosts = await fetchApiPosts();
+  const mappedApiPosts = apiPosts.map(post => ({
+    id: post.slug,
+    slug: post.slug,
+    isApi: true,
+    data: {
+      title: post.title,
+      published: new Date(post.published_at),
+      category: post.category,
+      tags: post.tags,
+      description: post.summary,
+      cover: post.cover_url,
+    },
+    rendered: {
+      metadata: {
+        frontmatter: {
+          readingMetadata: {
+            time: Math.ceil(post.summary.split(/\s+/).length / 200) || 1,
+            wordCount: post.summary.split(/\s+/).length || 5,
+          }
+        }
+      }
+    }
+  }));
+
+  const allBlogPostsMerged = [...mappedLocalPosts, ...mappedApiPosts];
+
+  const sorted = allBlogPostsMerged.sort((a, b) => {
     const dateA = new Date(a.data.published);
     const dateB = new Date(b.data.published);
     return dateA > dateB ? -1 : 1;
