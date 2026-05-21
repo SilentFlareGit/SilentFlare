@@ -5,6 +5,24 @@
       <router-link to="/posts/new" class="btn btn-primary">+ New Post</router-link>
     </div>
 
+    <!-- Search & filter controls -->
+    <div class="posts-filters" style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search by title, slug, or category…"
+        style="flex:1;min-width:200px;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px"
+      />
+      <select
+        v-model="statusFilter"
+        style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px"
+      >
+        <option value="all">All statuses</option>
+        <option value="draft">Draft</option>
+        <option value="published">Published</option>
+      </select>
+    </div>
+
     <div v-if="error" class="error-msg">{{ error }}</div>
 
     <div v-if="loading" style="text-align:center;padding:40px">Loading...</div>
@@ -17,14 +35,15 @@
           <th>Status</th>
           <th>Category</th>
           <th>Published</th>
+          <th>Updated</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-if="posts.length === 0">
-          <td colspan="6" style="text-align:center;padding:24px;color:#999">No posts yet.</td>
+        <tr v-if="filteredPosts.length === 0">
+          <td colspan="7" style="text-align:center;padding:24px;color:#999">No posts found.</td>
         </tr>
-        <tr v-for="post in posts" :key="post.id">
+        <tr v-for="post in filteredPosts" :key="post.id">
           <td>{{ post.id }}</td>
           <td>{{ post.title }}</td>
           <td>
@@ -34,6 +53,7 @@
           </td>
           <td>{{ post.category }}</td>
           <td>{{ formatDate(post.published_at) }}</td>
+          <td>{{ formatDate(post.updated_at) }}</td>
           <td>
             <router-link :to="`/posts/${post.id}/edit`" class="btn btn-secondary mr-8" style="padding:4px 10px;font-size:12px">
               Edit
@@ -49,12 +69,42 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { listPosts, deletePost } from '../api.js'
 
 const posts = ref([])
 const loading = ref(true)
 const error = ref('')
+
+// --- Filter state ---
+const searchQuery = ref('')
+const statusFilter = ref('all')
+
+// --- Computed: filtered + sorted posts ---
+const filteredPosts = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim()
+  const status = statusFilter.value
+
+  return posts.value
+    .filter((post) => {
+      // Status filter
+      if (status !== 'all' && post.status !== status) return false
+
+      // Search filter (title, slug, category)
+      if (query) {
+        const title = (post.title || '').toLowerCase()
+        const slug = (post.slug || '').toLowerCase()
+        const category = (post.category || '').toLowerCase()
+        if (!title.includes(query) && !slug.includes(query) && !category.includes(query)) {
+          return false
+        }
+      }
+
+      return true
+    })
+    // Sort newest first (highest id first)
+    .sort((a, b) => b.id - a.id)
+})
 
 async function load() {
   loading.value = true
