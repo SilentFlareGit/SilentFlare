@@ -9,6 +9,7 @@
     <div v-if="loadingPost" style="text-align:center;padding:40px">Loading...</div>
 
     <form v-else class="card" @submit.prevent="handleSubmit">
+      <div v-if="success" class="success-msg">{{ success }}</div>
       <div v-if="error" class="error-msg">{{ error }}</div>
 
       <div class="form-group">
@@ -102,6 +103,7 @@ const form = ref({
 
 const tagsInput = ref('')
 const error = ref('')
+const success = ref('')
 const loadError = ref('')
 const saving = ref(false)
 const loadingPost = ref(false)
@@ -137,6 +139,7 @@ onMounted(async () => {
 
 async function handleSubmit() {
   error.value = ''
+  success.value = ''
   saving.value = true
 
   // Build payload
@@ -156,7 +159,9 @@ async function handleSubmit() {
     } else {
       await createPost(payload)
     }
-    router.push({ name: 'Posts' })
+    // Show success briefly, then navigate back
+    success.value = isEdit.value ? 'Post updated successfully!' : 'Post created successfully!'
+    setTimeout(() => router.push({ name: 'Posts' }), 1500)
   } catch (e) {
     error.value = `Failed to ${isEdit.value ? 'update' : 'create'} post. ${e.message}`
   } finally {

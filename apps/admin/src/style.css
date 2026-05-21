@@ -197,6 +197,15 @@ main {
   font-size: 14px;
 }
 
+.success-msg {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
 /* Toolbar */
 
 .toolbar {
