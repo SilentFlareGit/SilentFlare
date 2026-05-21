@@ -1,14 +1,16 @@
 # SilentFlare
 
 SilentFlare is a small monorepo for the public blog, the FastAPI backend, and
-the admin frontend.
+the admin frontend. This README is the local development starting point and the
+high-level project map for future AI-assisted work.
 
 ## Project Overview
 
 - `apps/blog`: Astro/Yukina public blog frontend. It reads published posts from the backend public APIs.
 - `apps/api`: FastAPI backend with SQLite-backed public post APIs and admin post CRUD APIs.
-- `apps/admin`: Vue 3 + Vite admin frontend for managing posts.
+- `apps/admin`: Vue 3 + Vite admin frontend for managing posts with a ByteMD editor.
 - `docs/API_CONTRACT.md`: Current API contract for public and admin endpoints.
+- `.github/workflows/ci.yml`: GitHub Actions CI for admin build and API smoke test.
 
 ## Directory Structure
 
@@ -19,6 +21,9 @@ apps/
   blog/     Astro/Yukina blog frontend
 docs/
   API_CONTRACT.md
+.github/
+  workflows/
+    ci.yml
 ```
 
 ## Local Backend Setup On Windows CMD
@@ -109,10 +114,18 @@ cd apps\blog
 pnpm run build
 ```
 
+## CI
+
+GitHub Actions runs on push and pull request to `main`:
+
+- Admin build: installs `apps/admin` dependencies and runs `npm run build`.
+- API smoke test: installs `apps/api` dependencies, compiles backend code, starts Uvicorn, and runs `scripts/smoke_test.py`.
+
 ## Current Status
 
 - API works.
 - Admin CRUD works.
+- Admin uses a ByteMD editor.
 - Blog reads public posts from the backend.
 
 ## Notes
@@ -121,3 +134,4 @@ pnpm run build
 - Admin uses `VITE_API_BASE_URL`.
 - Blog uses `PUBLIC_API_BASE_URL`.
 - Local backend may run on `8001` if `8000` is blocked on Windows.
+- Do not put real secrets into `.env.example` files or this README.
