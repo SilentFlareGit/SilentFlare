@@ -27,8 +27,13 @@
       </div>
 
       <div class="form-group">
-        <label for="content_markdown">Content (Markdown)</label>
-        <textarea id="content_markdown" v-model="form.content_markdown"></textarea>
+        <label>Content (Markdown)</label>
+        <div class="bytemd-wrapper">
+          <Editor
+            :value="form.content_markdown"
+            @change="handleEditorChange"
+          />
+        </div>
       </div>
 
       <div class="form-group">
@@ -69,6 +74,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { Editor } from '@bytemd/vue-next'
+import 'bytemd/dist/index.min.css'
 import { getPost, createPost, updatePost } from '../api.js'
 
 const props = defineProps({
@@ -98,6 +105,11 @@ const error = ref('')
 const loadError = ref('')
 const saving = ref(false)
 const loadingPost = ref(false)
+
+// ByteMD emits @change with the new markdown string
+function handleEditorChange(val) {
+  form.value.content_markdown = val
+}
 
 // Load existing post for editing
 onMounted(async () => {

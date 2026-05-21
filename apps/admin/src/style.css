@@ -214,3 +214,15 @@ main {
 
 .mt-8 { margin-top: 8px; }
 .mr-8 { margin-right: 8px; }
+
+/* ByteMD editor */
+
+.bytemd-wrapper {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bytemd-wrapper .bytemd {
+  height: 400px;
+}
