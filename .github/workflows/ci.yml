@@ -47,6 +47,41 @@ jobs:
           sleep 5
           python scripts/smoke_test.py --base-url http://127.0.0.1:8000
 
+  admin-e2e:
+    name: admin e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Start API
+        working-directory: apps/api
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 &
+          sleep 5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/admin/package-lock.json
+      - name: Install admin dependencies
+        working-directory: apps/admin
+        run: npm ci
+      - name: Install Playwright Chromium
+        working-directory: apps/admin
+        run: npx playwright install --with-deps chromium
+      - name: Run admin E2E tests
+        working-directory: apps/admin
+        env:
+          VITE_API_BASE_URL: http://127.0.0.1:8001/api/v1
+        run: npm run test:e2e
+
   blog-build:
     name: blog build
     runs-on: ubuntu-latest

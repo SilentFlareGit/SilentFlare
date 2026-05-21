@@ -2,32 +2,49 @@
   <div>
     <div class="toolbar">
       <h2>Posts</h2>
-      <router-link to="/posts/new" class="btn btn-primary">+ New Post</router-link>
+      <router-link to="/posts/new" class="btn btn-primary" data-testid="new-post-link">+ New Post</router-link>
     </div>
 
     <!-- Search & filter controls -->
-    <div class="posts-filters" style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+    <div class="posts-filters" style="display:flex;gap:12px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
       <input
         v-model="searchQuery"
+        data-testid="post-search"
         type="text"
         placeholder="Search by title, slug, or category…"
         style="flex:1;min-width:200px;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px"
       />
       <select
         v-model="statusFilter"
+        data-testid="status-filter"
         style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px"
       >
         <option value="all">All statuses</option>
         <option value="draft">Draft</option>
         <option value="published">Published</option>
       </select>
+      <button
+        v-if="searchQuery || statusFilter !== 'all'"
+        class="btn btn-secondary"
+        data-testid="clear-filters"
+        style="padding:6px 12px;font-size:13px"
+        @click="clearFilters"
+      >
+        Clear filters
+      </button>
+    </div>
+
+    <!-- Count summary -->
+    <div v-if="!loading" style="margin-bottom:12px;font-size:13px;color:#666">
+      Showing {{ filteredPosts.length }} of {{ posts.length }} posts
+      · {{ draftCount }} draft · {{ publishedCount }} published
     </div>
 
     <div v-if="error" class="error-msg">{{ error }}</div>
 
     <div v-if="loading" style="text-align:center;padding:40px">Loading...</div>
 
-    <table v-else class="posts-table">
+    <table v-else class="posts-table" data-testid="posts-table">
       <thead>
         <tr>
           <th>ID</th>
@@ -43,7 +60,7 @@
         <tr v-if="filteredPosts.length === 0">
           <td colspan="7" style="text-align:center;padding:24px;color:#999">No posts found.</td>
         </tr>
-        <tr v-for="post in filteredPosts" :key="post.id">
+        <tr v-for="post in filteredPosts" :key="post.id" :data-testid="`post-row-${post.slug}`">
           <td>{{ post.id }}</td>
           <td>{{ post.title }}</td>
           <td>
@@ -54,11 +71,21 @@
           <td>{{ post.category }}</td>
           <td>{{ formatDate(post.published_at) }}</td>
           <td>{{ formatDate(post.updated_at) }}</td>
-          <td>
-            <router-link :to="`/posts/${post.id}/edit`" class="btn btn-secondary mr-8" style="padding:4px 10px;font-size:12px">
+          <td style="white-space:nowrap">
+            <button
+              class="btn"
+              :class="post.status === 'draft' ? 'btn-primary' : 'btn-secondary'"
+              :data-testid="`toggle-status-${post.slug}`"
+              style="padding:4px 10px;font-size:12px;margin-right:4px"
+              :disabled="post._toggling"
+              @click="handleToggleStatus(post)"
+            >
+              {{ post._toggling ? '...' : (post.status === 'draft' ? 'Publish' : 'Unpublish') }}
+            </button>
+            <router-link :to="`/posts/${post.id}/edit`" class="btn btn-secondary mr-8" :data-testid="`edit-post-${post.slug}`" style="padding:4px 10px;font-size:12px">
               Edit
             </router-link>
-            <button class="btn btn-danger" style="padding:4px 10px;font-size:12px" @click="handleDelete(post)">
+            <button class="btn btn-danger" :data-testid="`delete-post-${post.slug}`" style="padding:4px 10px;font-size:12px" @click="handleDelete(post)">
               Delete
             </button>
           </td>
@@ -70,7 +97,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { listPosts, deletePost } from '../api.js'
+import { listPosts, deletePost, updatePost } from '../api.js'
 
 const posts = ref([])
 const loading = ref(true)
@@ -79,6 +106,16 @@ const error = ref('')
 // --- Filter state ---
 const searchQuery = ref('')
 const statusFilter = ref('all')
+
+// --- Count helpers ---
+const draftCount = computed(() => posts.value.filter(p => p.status === 'draft').length)
+const publishedCount = computed(() => posts.value.filter(p => p.status === 'published').length)
+
+// --- Clear filters ---
+function clearFilters() {
+  searchQuery.value = ''
+  statusFilter.value = 'all'
+}
 
 // --- Computed: filtered + sorted posts ---
 const filteredPosts = computed(() => {
@@ -119,8 +156,28 @@ async function load() {
   }
 }
 
+// --- Quick status toggle ---
+async function handleToggleStatus(post) {
+  const newStatus = post.status === 'draft' ? 'published' : 'draft'
+  post._toggling = true
+  error.value = ''
+  try {
+    const updated = await updatePost(post.id, { status: newStatus })
+    // Update the post in our local array
+    const idx = posts.value.findIndex(p => p.id === post.id)
+    if (idx !== -1) {
+      posts.value[idx] = { ...posts.value[idx], ...updated, _toggling: false }
+    }
+  } catch (e) {
+    post._toggling = false
+    error.value = `Failed to ${newStatus === 'published' ? 'publish' : 'unpublish'} "${post.title}".`
+  }
+}
+
+// --- Better delete confirmation ---
 async function handleDelete(post) {
-  if (!confirm(`Delete "${post.title}"?`)) return
+  const msg = `Delete "${post.title}"?\nStatus: ${post.status}\nThis cannot be undone.`
+  if (!confirm(msg)) return
   try {
     await deletePost(post.id)
     posts.value = posts.value.filter(p => p.id !== post.id)

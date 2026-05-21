@@ -3,16 +3,16 @@
     <div class="card login-box">
       <h2>Admin Login</h2>
       <div v-if="error" class="error-msg">{{ error }}</div>
-      <form @submit.prevent="handleLogin">
+      <form data-testid="login-form" @submit.prevent="handleLogin">
         <div class="form-group">
           <label for="username">Username</label>
-          <input id="username" v-model="username" type="text" required autocomplete="username" />
+          <input id="username" v-model="username" data-testid="login-username" type="text" required autocomplete="username" />
         </div>
         <div class="form-group">
           <label for="password">Password</label>
-          <input id="password" v-model="password" type="password" required autocomplete="current-password" />
+          <input id="password" v-model="password" data-testid="login-password" type="password" required autocomplete="current-password" />
         </div>
-        <button type="submit" class="btn btn-primary" :disabled="loading" style="width:100%">
+        <button type="submit" class="btn btn-primary" :disabled="loading" data-testid="login-submit" style="width:100%">
           {{ loading ? 'Logging in...' : 'Login' }}
         </button>
       </form>

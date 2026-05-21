@@ -8,28 +8,28 @@
     <div v-if="loadError" class="error-msg">{{ loadError }}</div>
     <div v-if="loadingPost" style="text-align:center;padding:40px">Loading...</div>
 
-    <form v-else class="card" @submit.prevent="handleSubmit">
+    <form v-else class="card" data-testid="post-form" @submit.prevent="handleSubmit">
       <div v-if="success" class="success-msg">{{ success }}</div>
       <div v-if="error" class="error-msg">{{ error }}</div>
 
       <div class="form-group">
         <label for="title">Title</label>
-        <input id="title" v-model="form.title" type="text" required />
+        <input id="title" v-model="form.title" data-testid="post-title" type="text" required />
       </div>
 
       <div class="form-group">
         <label for="slug">Slug <small>(leave blank to auto-generate)</small></label>
-        <input id="slug" v-model="form.slug" type="text" />
+        <input id="slug" v-model="form.slug" data-testid="post-slug" type="text" @input="onSlugInput" />
       </div>
 
       <div class="form-group">
         <label for="summary">Summary</label>
-        <input id="summary" v-model="form.summary" type="text" />
+        <input id="summary" v-model="form.summary" data-testid="post-summary" type="text" />
       </div>
 
       <div class="form-group">
         <label>Content (Markdown)</label>
-        <div class="bytemd-wrapper">
+        <div class="bytemd-wrapper" data-testid="post-content-editor">
           <Editor
             :value="form.content_markdown"
             @change="handleEditorChange"
@@ -39,12 +39,12 @@
 
       <div class="form-group">
         <label for="cover_url">Cover URL</label>
-        <input id="cover_url" v-model="form.cover_url" type="text" />
+        <input id="cover_url" v-model="form.cover_url" data-testid="post-cover-url" type="text" />
       </div>
 
       <div class="form-group">
         <label for="status">Status</label>
-        <select id="status" v-model="form.status">
+        <select id="status" v-model="form.status" data-testid="post-status">
           <option value="draft">Draft</option>
           <option value="published">Published</option>
         </select>
@@ -52,20 +52,20 @@
 
       <div class="form-group">
         <label for="category">Category</label>
-        <input id="category" v-model="form.category" type="text" />
+        <input id="category" v-model="form.category" data-testid="post-category" type="text" />
       </div>
 
       <div class="form-group">
         <label for="tags">Tags <small>(comma-separated)</small></label>
-        <input id="tags" v-model="tagsInput" type="text" placeholder="tag1, tag2, tag3" />
+        <input id="tags" v-model="tagsInput" data-testid="post-tags" type="text" placeholder="tag1, tag2, tag3" />
       </div>
 
       <div class="form-group">
         <label for="published_at">Published At <small>(optional, e.g. 2026-05-20T12:00:00Z)</small></label>
-        <input id="published_at" v-model="form.published_at" type="text" />
+        <input id="published_at" v-model="form.published_at" data-testid="post-published-at" type="text" />
       </div>
 
-      <button type="submit" class="btn btn-primary" :disabled="saving">
+      <button type="submit" class="btn btn-primary" :disabled="saving" data-testid="post-submit">
         {{ saving ? 'Saving...' : (isEdit ? 'Update Post' : 'Create Post') }}
       </button>
     </form>
@@ -73,7 +73,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Editor } from '@bytemd/vue-next'
 import 'bytemd/dist/index.min.css'
@@ -107,6 +107,33 @@ const success = ref('')
 const loadError = ref('')
 const saving = ref(false)
 const loadingPost = ref(false)
+
+// --- Auto slug generation (new post only) ---
+const slugManuallyEdited = ref(false)
+
+// Simple slug helper: lowercase, replace non-alphanumeric with hyphens, trim hyphens
+function generateSlug(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+// When the user types in the slug field, mark it as manually edited
+function onSlugInput() {
+  slugManuallyEdited.value = true
+}
+
+// Watch title changes — auto-fill slug only for new posts and only if user hasn't edited slug
+watch(
+  () => form.value.title,
+  (newTitle) => {
+    if (isEdit.value) return
+    if (slugManuallyEdited.value) return
+    form.value.slug = generateSlug(newTitle)
+  }
+)
 
 // ByteMD emits @change with the new markdown string
 function handleEditorChange(val) {
