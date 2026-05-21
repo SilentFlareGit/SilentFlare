@@ -1,0 +1,131 @@
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/README.md b/README.md[m
+[1mindex ffe2581..a8774d3 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -1 +1,123 @@[m
+[31m-# SilentFlare[m
+\ No newline at end of file[m
+[32m+[m[32m# SilentFlare[m
+[32m+[m
+[32m+[m[32mSilentFlare is a small monorepo for the public blog, the FastAPI backend, and[m
+[32m+[m[32mthe admin frontend.[m
+[32m+[m
+[32m+[m[32m## Project Overview[m
+[32m+[m
+[32m+[m[32m- `apps/blog`: Astro/Yukina public blog frontend. It reads published posts from the backend public APIs.[m
+[32m+[m[32m- `apps/api`: FastAPI backend with SQLite-backed public post APIs and admin post CRUD APIs.[m
+[32m+[m[32m- `apps/admin`: Vue 3 + Vite admin frontend for managing posts.[m
+[32m+[m[32m- `docs/API_CONTRACT.md`: Current API contract for public and admin endpoints.[m
+[32m+[m
+[32m+[m[32m## Directory Structure[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mapps/[m
+[32m+[m[32m  api/      FastAPI backend[m
+[32m+[m[32m  admin/    Vue 3 + Vite admin frontend[m
+[32m+[m[32m  blog/     Astro/Yukina blog frontend[m
+[32m+[m[32mdocs/[m
+[32m+[m[32m  API_CONTRACT.md[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m## Local Backend Setup On Windows CMD[m
+[32m+[m
+[32m+[m[32m```cmd[m
+[32m+[m[32mcd apps\api[m
+[32m+[m[32mpython -m venv .venv[m
+[32m+[m[32m.venv\Scripts\activate.bat[m
+[32m+[m[32mpython -m pip install --upgrade pip[m
+[32m+[m[32mpip install -r requirements.txt[m
+[32m+[m[32mcopy .env.example .env[m
+[32m+[m[32muvicorn app.main:app --reload --host 127.0.0.1 --port 8000[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mIf port `8000` is blocked on Windows, use `8001`:[m
+[32m+[m
+[32m+[m[32m```cmd[m
+[32m+[m[32muvicorn app.main:app --reload --host 127.0.0.1 --port 8001[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m## Local Admin Setup On Windows CMD[m
+[32m+[m
+[32m+[m[32m```cmd[m
+[32m+[m[32mcd apps\admin[m
+[32m+[m[32mnpm install[m
+[32m+[m[32mcopy .env.example .env[m
+[32m+[m[32mnpm run dev -- --host 127.0.0.1 --port 5174[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m## Local Blog Setup On Windows CMD[m
+[32m+[m
+[32m+[m[32mStart the backend before running or building the blog.[m
+[32m+[m
+[32m+[m[32m```cmd[m
+[32m+[m[32mcd apps\blog[m
+[32m+[m[32mpnpm install[m
+[32m+[m[32mcopy .env.example .env[m
+[32m+[m[32mpnpm run dev -- --host 127.0.0.1 --port 4321[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m## Environment Variables[m
+[32m+[m
+[32m+[m[32m`apps/api/.env`:[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mADMIN_USERNAME=admin[m
+[32m+[m[32mADMIN_PASSWORD=admin123[m
+[32m+[m[32mJWT_SECRET_KEY=change-this-local-dev-secret[m
+[32m+[m[32mSILENTFLARE_DATABASE_PATH=data/blog.db[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m`apps/admin/.env`:[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mVITE_API_BASE_URL=http://127.0.0.1:8000/api/v1[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mUse `http://127.0.0.1:8001/api/v1` if the backend is running on port `8001`.[m
+[32m+[m
+[32m+[m[32m`apps/blog/.env`:[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mPUBLIC_API_BASE_URL=http://127.0.0.1:8000/api/v1[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mUse `http://127.0.0.1:8001/api/v1` if the backend is running on port `8001`.[m
+[32m+[m
+[32m+[m[32m## Validation Commands[m
+[32m+[m
+[32m+[m[32mAdmin build:[m
+[32m+[m
+[32m+[m[32m```cmd[m
+[32m+[m[32mcd apps\admin[m
+[32m+[m[32mnpm run build[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mBackend smoke test:[m
+[32m+[m
+[32m+[m[32m```cmd[m
+[32m+[m[32mcd apps\api[m
+[32m+[m[32mpython scripts\smoke_test.py --base-url http://127.0.0.1:8000[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mBlog build:[m
+[32m+[m
+[32m+[m[32m```cmd[m
+[32m+[m[32mcd apps\blog[m
+[32m+[m[32mpnpm run build[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m## Current Status[m
+[32m+[m
+[32m+[m[32m- API works.[m
+[32m+[m[32m- Admin CRUD works.[m
+[32m+[m[32m- Blog reads public posts from the backend.[m
+[32m+[m
+[32m+[m[32m## Notes[m
+[32m+[m
+[32m+[m[32m- Blog build needs the backend API running.[m
+[32m+[m[32m- Admin uses `VITE_API_BASE_URL`.[m
+[32m+[m[32m- Blog uses `PUBLIC_API_BASE_URL`.[m
+[32m+[m[32m- Local backend may run on `8001` if `8000` is blocked on Windows.[m
