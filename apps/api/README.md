@@ -10,6 +10,7 @@ Admin auth reads these environment variables:
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
 - `JWT_SECRET_KEY`
+- `SILENTFLARE_DATABASE_PATH`
 
 For local development, copy `.env.example` to `.env`. The example credentials
 are:

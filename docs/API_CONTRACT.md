@@ -105,7 +105,7 @@ Response:
 
 ### GET /api/v1/admin/posts
 
-Requires authentication. Lists all posts, including drafts.
+Requires authentication. Lists both draft and published posts.
 
 Response:
 
@@ -133,7 +133,7 @@ Response:
 
 ### GET /api/v1/admin/posts/{id}
 
-Requires authentication. Returns one post, including drafts.
+Requires authentication. Returns one draft or published post by numeric `id`.
 
 Response:
 
@@ -201,7 +201,9 @@ Request:
 ```json
 {
   "title": "Updated Draft",
-  "status": "published"
+  "summary": "Updated summary.",
+  "status": "published",
+  "tags": ["updated"]
 }
 ```
 
@@ -218,4 +220,22 @@ Response:
   "status": "deleted",
   "id": 3
 }
+```
+
+## Local Development
+
+The backend reads these environment variables:
+
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+- `JWT_SECRET_KEY`
+- `SILENTFLARE_DATABASE_PATH`
+
+Local example credentials are documented in `apps/api/.env.example`. Do not use
+the example secret values in production.
+
+Run the backend smoke test from `apps/api`:
+
+```cmd
+python scripts\smoke_test.py --base-url http://127.0.0.1:8000
 ```
