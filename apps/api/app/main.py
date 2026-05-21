@@ -18,7 +18,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://blog.silentflare.com",
+        "https://admin.silentflare.com",
         "http://localhost:4321",
+        "http://localhost:5173",
+        "http://localhost:5174",
     ],
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],

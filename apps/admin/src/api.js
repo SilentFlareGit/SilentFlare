@@ -1,0 +1,79 @@
+// API helper — all fetch calls go through here
+
+import { getToken, clearToken } from './auth.js'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1'
+
+/**
+ * Make an API request. Automatically attaches Authorization header if token exists.
+ * Returns parsed JSON on success; throws on HTTP error.
+ */
+export async function apiFetch(path, options = {}) {
+  const url = `${API_BASE}${path}`
+  const token = getToken()
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const res = await fetch(url, { ...options, headers })
+
+  // If 401, clear token so the auth guard redirects to login
+  if (res.status === 401) {
+    clearToken()
+    window.location.hash = '#/login'
+    throw new Error('Unauthorized')
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`API ${res.status}: ${text}`)
+  }
+
+  // DELETE may return 204 or a JSON body
+  if (res.status === 204) return null
+  return res.json()
+}
+
+// ── Auth ────────────────────────────────────────────────
+
+export function login(username, password) {
+  return apiFetch('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  })
+}
+
+// ── Admin Posts ─────────────────────────────────────────
+
+export function listPosts() {
+  return apiFetch('/admin/posts')
+}
+
+export function getPost(id) {
+  return apiFetch(`/admin/posts/${id}`)
+}
+
+export function createPost(data) {
+  return apiFetch('/admin/posts', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function updatePost(id, data) {
+  return apiFetch(`/admin/posts/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+export function deletePost(id) {
+  return apiFetch(`/admin/posts/${id}`, {
+    method: 'DELETE',
+  })
+}
