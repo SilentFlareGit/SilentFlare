@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  admin-build:
+    name: admin build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/admin/package-lock.json
+      - name: Install admin dependencies
+        working-directory: apps/admin
+        run: npm ci
+      - name: Build admin
+        working-directory: apps/admin
+        run: npm run build
+
+  api-smoke-test:
+    name: api smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Compile API
+        working-directory: apps/api
+        run: python -m compileall app scripts
+      - name: Run API smoke test
+        working-directory: apps/api
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          sleep 5
+          python scripts/smoke_test.py --base-url http://127.0.0.1:8000
