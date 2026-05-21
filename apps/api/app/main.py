@@ -1,9 +1,13 @@
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 
 app = FastAPI(title="SilentFlare Blog API")
+UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,6 +20,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
+
 
 MOCK_POSTS = [
     {
@@ -24,7 +30,7 @@ MOCK_POSTS = [
         "slug": "first-post",
         "summary": "A short summary.",
         "content_markdown": "# Hello",
-        "cover_url": "https://api.silentflare.com/uploads/covers/first-post.jpg",
+        "cover_url": "http://127.0.0.1:8000/uploads/covers/first-post.jpg",
         "category": "Notes",
         "tags": ["personal", "blog"],
         "published_at": "2026-05-20T12:00:00Z",
@@ -35,7 +41,7 @@ MOCK_POSTS = [
         "slug": "building-silentflare",
         "summary": "Notes from the first backend pass.",
         "content_markdown": "# Building SilentFlare\n\nThis is mock content for the first API version.",
-        "cover_url": "https://api.silentflare.com/uploads/covers/building-silentflare.jpg",
+        "cover_url": "http://127.0.0.1:8000/uploads/covers/building-silentflare.jpg",
         "category": "Development",
         "tags": ["fastapi", "backend"],
         "published_at": "2026-05-20T13:00:00Z",
