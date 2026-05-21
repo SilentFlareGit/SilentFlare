@@ -48,6 +48,12 @@ async function fillMarkdownEditor(page, value) {
   await page.keyboard.type(value)
 }
 
+async function expectSaveAndReturnToPosts(page, message) {
+  await expect(page.locator('.success-msg')).toContainText(message)
+  await expect(page).toHaveURL(/#\/posts$/, { timeout: 10_000 })
+  await expect(page.getByTestId('posts-table')).toBeVisible({ timeout: 10_000 })
+}
+
 test('admin can manage a draft post end to end', async ({ page, request }) => {
   const token = await loginThroughApi(request)
   await cleanupPosts(request, token)
@@ -78,8 +84,7 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await page.getByTestId('post-tags').fill('e2e, playwright')
     await page.getByTestId('post-status').selectOption('draft')
     await page.getByTestId('post-submit').click()
-
-    await expect(page).toHaveURL(/#\/posts$/)
+    await expectSaveAndReturnToPosts(page, 'Post created successfully!')
 
     const row = page.getByTestId(`post-row-${slug}`)
     await expect(row).toBeVisible()
@@ -112,7 +117,7 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await expect(page.getByTestId('post-form')).toBeVisible()
     await page.getByTestId('post-summary').fill(updatedSummary)
     await page.getByTestId('post-submit').click()
-    await expect(page).toHaveURL(/#\/posts$/)
+    await expectSaveAndReturnToPosts(page, 'Post updated successfully!')
     await expect(row).toBeVisible()
 
     page.once('dialog', dialog => dialog.accept())
