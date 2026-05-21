@@ -70,6 +70,26 @@ Open:
 Draft posts appear in admin APIs but not in the public `GET /api/v1/posts`
 response. Published posts appear in both.
 
+## Run Smoke Tests
+
+Start the backend first. If port `8000` is busy, start it on `8001`:
+
+```cmd
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
+```
+
+Then run:
+
+```cmd
+python scripts\smoke_test.py --base-url http://127.0.0.1:8001
+```
+
+For the default `8000` port:
+
+```cmd
+python scripts\smoke_test.py --base-url http://127.0.0.1:8000
+```
+
 ## Current Scope
 
 - Public blog endpoints only
