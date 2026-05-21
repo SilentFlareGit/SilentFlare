@@ -9,6 +9,9 @@
 
 ## Public Blog APIs
 
+Public post endpoints return published posts only. Draft posts are only visible
+through authenticated admin APIs.
+
 ### GET /api/v1/health
 
 Response:
@@ -61,30 +64,158 @@ Response:
 
 ## Admin APIs
 
+Admin APIs use Bearer token authentication. Get a token from
+`POST /api/v1/auth/login`, then send it as:
+
+```http
+Authorization: Bearer <access_token>
+```
+
 ### POST /api/v1/auth/login
 
-Login to admin panel.
+Request:
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+Response:
+
+```json
+{
+  "access_token": "jwt-token",
+  "token_type": "bearer"
+}
+```
 
 ### POST /api/v1/auth/logout
 
-Logout from admin panel.
+Requires authentication.
+
+Response:
+
+```json
+{
+  "status": "ok"
+}
+```
 
 ### GET /api/v1/admin/posts
 
-List all posts, including drafts.
+Requires authentication. Lists all posts, including drafts.
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "title": "First Post",
+      "slug": "first-post",
+      "summary": "A short summary.",
+      "content_markdown": "# Hello",
+      "cover_url": "https://api.silentflare.com/uploads/covers/first-post.jpg",
+      "status": "published",
+      "category": "Notes",
+      "tags": ["personal", "blog"],
+      "created_at": "2026-05-20T12:00:00Z",
+      "updated_at": "2026-05-20T12:00:00Z",
+      "published_at": "2026-05-20T12:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+### GET /api/v1/admin/posts/{id}
+
+Requires authentication. Returns one post, including drafts.
+
+Response:
+
+```json
+{
+  "id": 1,
+  "title": "First Post",
+  "slug": "first-post",
+  "summary": "A short summary.",
+  "content_markdown": "# Hello",
+  "cover_url": "https://api.silentflare.com/uploads/covers/first-post.jpg",
+  "status": "published",
+  "category": "Notes",
+  "tags": ["personal", "blog"],
+  "created_at": "2026-05-20T12:00:00Z",
+  "updated_at": "2026-05-20T12:00:00Z",
+  "published_at": "2026-05-20T12:00:00Z"
+}
+```
 
 ### POST /api/v1/admin/posts
 
-Create a new post.
+Requires authentication. Creates a draft or published post. If `slug` is
+missing, it is generated from `title`. Slugs must be unique.
+
+Request:
+
+```json
+{
+  "title": "New Draft",
+  "summary": "Draft summary.",
+  "content_markdown": "# Draft",
+  "cover_url": "",
+  "status": "draft",
+  "category": "Notes",
+  "tags": ["draft"]
+}
+```
+
+Response: `201 Created`
+
+```json
+{
+  "id": 3,
+  "title": "New Draft",
+  "slug": "new-draft",
+  "summary": "Draft summary.",
+  "content_markdown": "# Draft",
+  "cover_url": "",
+  "status": "draft",
+  "category": "Notes",
+  "tags": ["draft"],
+  "created_at": "2026-05-21T10:00:00Z",
+  "updated_at": "2026-05-21T10:00:00Z",
+  "published_at": ""
+}
+```
 
 ### PUT /api/v1/admin/posts/{id}
 
-Update a post.
+Requires authentication. Updates provided fields and refreshes `updated_at`.
+
+Request:
+
+```json
+{
+  "title": "Updated Draft",
+  "status": "published"
+}
+```
+
+Response: admin post response.
 
 ### DELETE /api/v1/admin/posts/{id}
 
-Delete a post.
+Requires authentication. Hard deletes a post for now.
 
-### POST /api/v1/admin/upload
+Response:
 
-Upload cover images or article images.
+```json
+{
+  "status": "deleted",
+  "id": 3
+}
+```
