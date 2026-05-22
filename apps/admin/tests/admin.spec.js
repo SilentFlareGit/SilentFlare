@@ -4,6 +4,12 @@ const API_BASE_URL = process.env.VITE_API_BASE_URL || 'http://127.0.0.1:8001/api
 const TEST_TITLE_PREFIX = 'E2E Admin'
 const TEST_SLUG_PREFIX = 'e2e-admin'
 
+test.setTimeout(90_000)
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 async function loginThroughApi(request) {
   const response = await request.post(`${API_BASE_URL}/auth/login`, {
     data: {
@@ -48,10 +54,39 @@ async function fillMarkdownEditor(page, value) {
   await page.keyboard.type(value)
 }
 
+async function expectMarkdownPreview(page, heading, body) {
+  const editor = page.getByTestId('post-content-editor')
+  const preview = editor.locator('.bytemd-preview')
+  await expect(preview).toContainText(heading)
+  await expect(preview).toContainText(body)
+}
+
 async function expectSaveAndReturnToPosts(page, message) {
   await expect(page.locator('.success-msg')).toContainText(message)
   await expect(page).toHaveURL(/#\/posts$/, { timeout: 10_000 })
   await expect(page.getByTestId('posts-table')).toBeVisible({ timeout: 10_000 })
+}
+
+async function expectRowPublicLink(row, slug) {
+  const link = row.getByRole('link', { name: /^View$/i })
+  await expect(link).toBeVisible()
+  await expect(link).toHaveAttribute('href', new RegExp(`/${escapeRegExp(slug)}(?:[/?#]|$)`))
+}
+
+async function expectNoRowPublicLink(row) {
+  await expect(row.getByRole('link', { name: /^View$/i })).toHaveCount(0)
+}
+
+async function expectDraftVisibilityHint(page) {
+  await expect(
+    page.getByText(/draft.*(not.*public|not publicly visible|only visible|private)|not.*public.*draft/i)
+  ).toBeVisible()
+}
+
+async function expectEditPublicLink(page, slug) {
+  const link = page.getByRole('link', { name: /View Public Post/i })
+  await expect(link).toBeVisible()
+  await expect(link).toHaveAttribute('href', new RegExp(`/${escapeRegExp(slug)}(?:[/?#]|$)`))
 }
 
 test('admin can manage a draft post end to end', async ({ page, request }) => {
@@ -62,6 +97,7 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
   const title = `${TEST_TITLE_PREFIX} ${uniqueId}`
   const slug = `${TEST_SLUG_PREFIX}-${uniqueId}`
   const updatedSummary = `Updated by Playwright ${uniqueId}`
+  const previewBody = `Initial E2E content ${uniqueId}.`
 
   try {
     await page.goto('/')
@@ -79,7 +115,8 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await page.getByTestId('post-title').fill(title)
     await expect(page.getByTestId('post-slug')).toHaveValue(slug)
     await page.getByTestId('post-summary').fill(`Draft created by Playwright ${uniqueId}`)
-    await fillMarkdownEditor(page, `# ${title}\n\nInitial E2E content.`)
+    await fillMarkdownEditor(page, `# ${title}\n\n${previewBody}`)
+    await expectMarkdownPreview(page, title, previewBody)
     await page.getByTestId('post-category').fill('e2e')
     await page.getByTestId('post-tags').fill('e2e, playwright')
     await page.getByTestId('post-status').selectOption('draft')
@@ -90,6 +127,7 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await expect(row).toBeVisible()
     await expect(row).toContainText(title)
     await expect(row).toContainText('draft')
+    await expectNoRowPublicLink(row)
 
     await page.getByTestId('post-search').fill(slug)
     await expect(row).toBeVisible()
@@ -102,23 +140,39 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await expect(page.getByTestId('status-filter')).toHaveValue('all')
 
     await page.getByTestId('post-search').fill(slug)
+    await page.getByTestId(`edit-post-${slug}`).click()
+    await expect(page.getByTestId('post-form')).toBeVisible()
+    await expect(page.getByTestId('post-status')).toHaveValue('draft')
+    await expectDraftVisibilityHint(page)
+    await expect(page.getByRole('link', { name: /View Public Post/i })).toHaveCount(0)
+    await page.getByTestId('post-summary').fill(updatedSummary)
+    await page.getByTestId('post-submit').click()
+    await expectSaveAndReturnToPosts(page, 'Post updated successfully!')
+    await expect(row).toBeVisible()
+
+    await page.getByTestId('post-search').fill(slug)
     await page.getByTestId('status-filter').selectOption('draft')
     await page.getByTestId(`toggle-status-${slug}`).click()
     await page.getByTestId('status-filter').selectOption('published')
     await expect(row).toBeVisible()
     await expect(row).toContainText('published')
+    await expectRowPublicLink(row, slug)
+
+    await page.getByTestId(`edit-post-${slug}`).click()
+    await expect(page.getByTestId('post-form')).toBeVisible()
+    await expect(page.getByTestId('post-status')).toHaveValue('published')
+    await expectEditPublicLink(page, slug)
+    await page.goto('/#/posts')
+    await expect(page.getByTestId('posts-table')).toBeVisible()
+    await page.getByTestId('post-search').fill(slug)
+    await page.getByTestId('status-filter').selectOption('published')
+    await expect(row).toBeVisible()
 
     await page.getByTestId(`toggle-status-${slug}`).click()
     await page.getByTestId('status-filter').selectOption('draft')
     await expect(row).toBeVisible()
     await expect(row).toContainText('draft')
-
-    await page.getByTestId(`edit-post-${slug}`).click()
-    await expect(page.getByTestId('post-form')).toBeVisible()
-    await page.getByTestId('post-summary').fill(updatedSummary)
-    await page.getByTestId('post-submit').click()
-    await expectSaveAndReturnToPosts(page, 'Post updated successfully!')
-    await expect(row).toBeVisible()
+    await expectNoRowPublicLink(row)
 
     page.once('dialog', dialog => dialog.accept())
     await page.getByTestId(`delete-post-${slug}`).click()
