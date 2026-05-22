@@ -88,6 +88,14 @@
             <button class="btn btn-danger" :data-testid="`delete-post-${post.slug}`" style="padding:4px 10px;font-size:12px" @click="handleDelete(post)">
               Delete
             </button>
+            <a
+              v-if="post.status === 'published' && post.slug"
+              :href="`${blogBaseUrl}/posts/${post.slug}`"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="view-link"
+            >View</a>
+            <span v-else class="draft-only-label">Draft only</span>
           </td>
         </tr>
       </tbody>
@@ -98,6 +106,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { listPosts, deletePost, updatePost } from '../api.js'
+
+const blogBaseUrl = import.meta.env.VITE_PUBLIC_BLOG_BASE_URL || 'http://localhost:4321'
 
 const posts = ref([])
 const loading = ref(true)

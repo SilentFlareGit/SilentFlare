@@ -235,3 +235,37 @@ main {
 .bytemd-wrapper .bytemd {
   height: 400px;
 }
+
+/* View link in posts table */
+.view-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 12px;
+  padding: 4px 10px;
+}
+.view-link:hover {
+  text-decoration: underline;
+}
+
+/* Muted draft-only label */
+.draft-only-label {
+  color: #9ca3af;
+  font-size: 12px;
+  font-style: italic;
+  padding: 4px 10px;
+}
+
+/* Draft hint on edit page */
+.draft-hint {
+  color: #9ca3af;
+  font-size: 13px;
+  font-style: italic;
+  margin-bottom: 12px;
+}
+
+/* Badge vertical alignment in toolbar h2 */
+.toolbar h2 .badge {
+  vertical-align: middle;
+  margin-left: 8px;
+  font-size: 12px;
+}

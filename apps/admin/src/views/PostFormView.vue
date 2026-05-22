@@ -1,9 +1,27 @@
 <template>
   <div>
     <div class="toolbar">
-      <h2>{{ isEdit ? 'Edit Post' : 'New Post' }}</h2>
-      <router-link to="/posts" class="btn btn-secondary">← Back</router-link>
+      <h2>
+        {{ isEdit ? 'Edit Post' : 'New Post' }}
+        <span class="badge" :class="form.status === 'published' ? 'badge-published' : 'badge-draft'">
+          {{ form.status }}
+        </span>
+      </h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a
+          v-if="publicPostUrl"
+          :href="publicPostUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-secondary"
+          style="font-size:13px;padding:6px 12px"
+        >View Public Post</a>
+        <router-link to="/posts" class="btn btn-secondary">← Back</router-link>
+      </div>
     </div>
+    <p v-if="isEdit && form.status === 'draft'" class="draft-hint">
+      Draft posts are not visible on the public blog.
+    </p>
 
     <div v-if="loadError" class="error-msg">{{ loadError }}</div>
     <div v-if="loadingPost" style="text-align:center;padding:40px">Loading...</div>
@@ -32,6 +50,7 @@
         <div class="bytemd-wrapper" data-testid="post-content-editor">
           <Editor
             :value="form.content_markdown"
+            mode="split"
             @change="handleEditorChange"
           />
         </div>
@@ -79,6 +98,8 @@ import { Editor } from '@bytemd/vue-next'
 import 'bytemd/dist/index.min.css'
 import { getPost, createPost, updatePost } from '../api.js'
 
+const blogBaseUrl = import.meta.env.VITE_PUBLIC_BLOG_BASE_URL || 'http://localhost:4321'
+
 const props = defineProps({
   id: String,
 })
@@ -89,6 +110,13 @@ const route = useRoute()
 // Determine edit vs new from the route
 const postId = computed(() => props.id || route.params.id)
 const isEdit = computed(() => !!postId.value)
+
+const publicPostUrl = computed(() => {
+  if (isEdit.value && form.value.status === 'published' && form.value.slug) {
+    return `${blogBaseUrl}/posts/${form.value.slug}`
+  }
+  return ''
+})
 
 const form = ref({
   title: '',
