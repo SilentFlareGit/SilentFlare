@@ -2,6 +2,10 @@
   <div>
     <header class="app-header" v-if="loggedIn">
       <h1>SilentFlare Admin</h1>
+      <nav class="app-nav">
+        <router-link to="/posts" data-testid="nav-posts">Posts</router-link>
+        <router-link to="/media" data-testid="nav-media">Media</router-link>
+      </nav>
       <button @click="logout">Logout</button>
     </header>
     <main>

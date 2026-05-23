@@ -269,3 +269,62 @@ main {
   margin-left: 8px;
   font-size: 12px;
 }
+
+/* Header navigation */
+
+.app-nav {
+  display: flex;
+  gap: 16px;
+}
+
+.app-nav a {
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.app-nav a:hover,
+.app-nav a.router-link-active {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+/* Media table */
+
+.media-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.media-table th,
+.media-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.media-table th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.media-thumb {
+  width: 72px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 3px;
+  display: block;
+}
+
+.media-filename {
+  word-break: break-all;
+  max-width: 200px;
+}

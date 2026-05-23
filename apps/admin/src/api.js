@@ -111,3 +111,15 @@ export async function uploadCover(file) {
 
   return res.json()
 }
+
+// ── Cover upload management ─────────────────────────────
+
+export function listCoverUploads() {
+  return apiFetch('/admin/uploads/covers')
+}
+
+export function deleteCoverUpload(filename) {
+  return apiFetch(`/admin/uploads/covers/${encodeURIComponent(filename)}`, {
+    method: 'DELETE',
+  })
+}
