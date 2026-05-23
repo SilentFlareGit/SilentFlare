@@ -6,11 +6,11 @@ high-level project map for future AI-assisted work.
 
 ## Project Overview
 
+- `apps/api`: FastAPI backend with public blog APIs and admin post CRUD APIs.
 - `apps/blog`: Astro/Yukina public blog frontend. It reads published posts from the backend public APIs.
-- `apps/api`: FastAPI backend with SQLite-backed public post APIs and admin post CRUD APIs.
-- `apps/admin`: Vue 3 + Vite admin frontend for managing posts with a ByteMD editor.
+- `apps/admin`: Vue 3 + Vite admin frontend with login, posts CRUD, ByteMD editing, split Markdown preview, status badges, draft/published workflow, public view links, draft visibility hints, and Playwright E2E coverage.
 - `docs/API_CONTRACT.md`: Current API contract for public and admin endpoints.
-- `.github/workflows/ci.yml`: GitHub Actions CI for admin build and API smoke test.
+- `.github/workflows/ci.yml`: GitHub Actions CI for admin build, API smoke test, blog build, and admin E2E.
 
 ## Directory Structure
 
@@ -79,6 +79,7 @@ SILENTFLARE_DATABASE_PATH=data/blog.db
 
 ```text
 VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1
+VITE_PUBLIC_BLOG_BASE_URL=http://localhost:4321
 ```
 
 Use `http://127.0.0.1:8001/api/v1` if the backend is running on port `8001`.
@@ -100,6 +101,15 @@ cd apps\admin
 npm run build
 ```
 
+Admin Playwright E2E:
+
+```cmd
+cd apps\admin
+npm run test:e2e
+```
+
+Local admin E2E requires the API backend running unless CI starts it for the job.
+
 Backend smoke test:
 
 ```cmd
@@ -120,18 +130,20 @@ GitHub Actions runs on push and pull request to `main`:
 
 - Admin build: installs `apps/admin` dependencies and runs `npm run build`.
 - API smoke test: installs `apps/api` dependencies, compiles backend code, starts Uvicorn, and runs `scripts/smoke_test.py`.
+- Blog build: installs `apps/blog` dependencies, starts the backend, and runs `pnpm run build`.
+- Admin E2E: runs the Playwright admin test suite with the backend available in CI.
 
 ## Current Status
 
-- API works.
-- Admin CRUD works.
-- Admin uses a ByteMD editor.
-- Blog reads public posts from the backend.
+- API provides public blog APIs and admin post CRUD.
+- Blog reads published posts from the backend.
+- Admin supports login, posts CRUD, ByteMD editing, split Markdown preview, status badges, draft/published workflow, quick publish/unpublish, search, status filtering, public view links for published posts, a View Public Post link on published edit pages, and draft visibility hints.
+- CI covers admin build, API smoke test, blog build, and admin Playwright E2E.
 
 ## Notes
 
 - Blog build needs the backend API running.
-- Admin uses `VITE_API_BASE_URL`.
+- Admin uses `VITE_API_BASE_URL` and `VITE_PUBLIC_BLOG_BASE_URL`.
 - Blog uses `PUBLIC_API_BASE_URL`.
 - Local backend may run on `8001` if `8000` is blocked on Windows.
 - Do not put real secrets into `.env.example` files or this README.
