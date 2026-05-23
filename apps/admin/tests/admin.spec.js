@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test'
 const API_BASE_URL = process.env.VITE_API_BASE_URL || 'http://127.0.0.1:8001/api/v1'
 const TEST_TITLE_PREFIX = 'E2E Admin'
 const TEST_SLUG_PREFIX = 'e2e-admin'
+const TINY_PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGNgAAAAAgAB4iG8MwAAAABJRU5ErkJggg=='
 
 test.setTimeout(90_000)
 
@@ -89,6 +91,24 @@ async function expectEditPublicLink(page, slug) {
   await expect(link).toHaveAttribute('href', new RegExp(`/${escapeRegExp(slug)}(?:[/?#]|$)`))
 }
 
+async function uploadTinyCoverImage(page) {
+  await page.getByTestId('cover-file-input').setInputFiles({
+    name: 'cover-e2e.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(TINY_PNG_BASE64, 'base64'),
+  })
+
+  const coverUrlInput = page.getByTestId('post-cover-url')
+  await expect(coverUrlInput).toHaveValue(/\/uploads\/covers\/.+\.png(?:$|\?)/)
+  const coverUrl = await coverUrlInput.inputValue()
+
+  const preview = page.getByTestId('cover-preview')
+  await expect(preview).toBeVisible()
+  await expect(preview).toHaveAttribute('src', coverUrl)
+
+  return coverUrl
+}
+
 test('admin can manage a draft post end to end', async ({ page, request }) => {
   const token = await loginThroughApi(request)
   await cleanupPosts(request, token)
@@ -98,6 +118,7 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
   const slug = `${TEST_SLUG_PREFIX}-${uniqueId}`
   const updatedSummary = `Updated by Playwright ${uniqueId}`
   const previewBody = `Initial E2E content ${uniqueId}.`
+  let uploadedCoverUrl = ''
 
   try {
     await page.goto('/')
@@ -119,6 +140,7 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await expectMarkdownPreview(page, title, previewBody)
     await page.getByTestId('post-category').fill('e2e')
     await page.getByTestId('post-tags').fill('e2e, playwright')
+    uploadedCoverUrl = await uploadTinyCoverImage(page)
     await page.getByTestId('post-status').selectOption('draft')
     await page.getByTestId('post-submit').click()
     await expectSaveAndReturnToPosts(page, 'Post created successfully!')
@@ -143,6 +165,9 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await page.getByTestId(`edit-post-${slug}`).click()
     await expect(page.getByTestId('post-form')).toBeVisible()
     await expect(page.getByTestId('post-status')).toHaveValue('draft')
+    await expect(page.getByTestId('post-cover-url')).toHaveValue(uploadedCoverUrl)
+    await expect(page.getByTestId('cover-preview')).toBeVisible()
+    await expect(page.getByTestId('cover-preview')).toHaveAttribute('src', uploadedCoverUrl)
     await expectDraftVisibilityHint(page)
     await expect(page.getByRole('link', { name: /View Public Post/i })).toHaveCount(0)
     await page.getByTestId('post-summary').fill(updatedSummary)

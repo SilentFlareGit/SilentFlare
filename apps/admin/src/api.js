@@ -77,3 +77,37 @@ export function deletePost(id) {
     method: 'DELETE',
   })
 }
+
+// ── Uploads ─────────────────────────────────────────────
+
+/**
+ * Upload a cover image. Uses FormData (not JSON) so we must
+ * NOT set Content-Type — the browser sets the multipart boundary.
+ */
+export async function uploadCover(file) {
+  const url = `${API_BASE}/admin/uploads/cover`
+  const token = getToken()
+
+  const body = new FormData()
+  body.append('file', file)
+
+  const headers = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const res = await fetch(url, { method: 'POST', headers, body })
+
+  if (res.status === 401) {
+    clearToken()
+    window.location.hash = '#/login'
+    throw new Error('Unauthorized')
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`Upload failed (${res.status}): ${text}`)
+  }
+
+  return res.json()
+}

@@ -58,7 +58,35 @@
 
       <div class="form-group">
         <label for="cover_url">Cover URL</label>
-        <input id="cover_url" v-model="form.cover_url" data-testid="post-cover-url" type="text" />
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="cover_url" v-model="form.cover_url" data-testid="post-cover-url" type="text" style="flex:1" />
+          <input
+            ref="coverFileInput"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            data-testid="cover-file-input"
+            style="display:none"
+            @change="handleCoverUpload"
+          />
+          <button
+            type="button"
+            class="btn btn-secondary"
+            style="white-space:nowrap;font-size:13px;padding:6px 12px"
+            :disabled="uploading"
+            data-testid="cover-upload-btn"
+            @click="coverFileInput?.click()"
+          >
+            {{ uploading ? 'Uploading…' : 'Upload Image' }}
+          </button>
+        </div>
+        <p v-if="uploadError" class="error-msg" style="margin-top:4px;font-size:13px" data-testid="cover-upload-error">{{ uploadError }}</p>
+        <img
+          v-if="form.cover_url"
+          :src="form.cover_url"
+          alt="Cover preview"
+          data-testid="cover-preview"
+          style="margin-top:8px;max-width:320px;max-height:180px;border-radius:4px;border:1px solid #333"
+        />
       </div>
 
       <div class="form-group">
@@ -96,7 +124,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Editor } from '@bytemd/vue-next'
 import 'bytemd/dist/index.min.css'
-import { getPost, createPost, updatePost } from '../api.js'
+import { getPost, createPost, updatePost, uploadCover } from '../api.js'
 
 const blogBaseUrl = import.meta.env.VITE_PUBLIC_BLOG_BASE_URL || 'http://localhost:4321'
 
@@ -136,6 +164,11 @@ const loadError = ref('')
 const saving = ref(false)
 const loadingPost = ref(false)
 
+// Cover upload
+const coverFileInput = ref(null)
+const uploading = ref(false)
+const uploadError = ref('')
+
 // --- Auto slug generation (new post only) ---
 const slugManuallyEdited = ref(false)
 
@@ -162,6 +195,26 @@ watch(
     form.value.slug = generateSlug(newTitle)
   }
 )
+
+// ── Cover image upload ──────────────────────────────────
+async function handleCoverUpload(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  uploading.value = true
+  uploadError.value = ''
+
+  try {
+    const data = await uploadCover(file)
+    form.value.cover_url = data.cover_url
+  } catch (e) {
+    uploadError.value = e.message || 'Upload failed'
+  } finally {
+    uploading.value = false
+    // Reset so the same file can be re-selected
+    if (coverFileInput.value) coverFileInput.value.value = ''
+  }
+}
 
 // ByteMD emits @change with the new markdown string
 function handleEditorChange(val) {
