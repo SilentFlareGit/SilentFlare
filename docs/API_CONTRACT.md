@@ -121,6 +121,44 @@ Response:
 }
 ```
 
+### GET /api/v1/admin/uploads/covers
+
+Requires authentication. Lists cover files directly under `/uploads/covers/`
+and reports whether each file is referenced by any post `cover_url`.
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "filename": "6f1f7f4f0b784b3e8f98d0f01cfc3a2d.png",
+      "path": "/uploads/covers/6f1f7f4f0b784b3e8f98d0f01cfc3a2d.png",
+      "cover_url": "http://127.0.0.1:8000/uploads/covers/6f1f7f4f0b784b3e8f98d0f01cfc3a2d.png",
+      "size_bytes": 1234,
+      "modified_at": "2026-05-23T12:00:00Z",
+      "used": true,
+      "used_by_post_ids": [1]
+    }
+  ],
+  "total": 1
+}
+```
+
+### DELETE /api/v1/admin/uploads/covers/{filename}
+
+Requires authentication. Deletes an unused cover file. Files referenced by any
+post `cover_url` return `409 Conflict` and are not deleted.
+
+Response:
+
+```json
+{
+  "status": "deleted",
+  "filename": "6f1f7f4f0b784b3e8f98d0f01cfc3a2d.png"
+}
+```
+
 ### GET /api/v1/admin/posts
 
 Requires authentication. Lists both draft and published posts.

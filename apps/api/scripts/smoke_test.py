@@ -67,14 +67,18 @@ class SmokeTest:
             self.test_unauthenticated_admin_rejected()
             self.test_unauthenticated_upload_rejected()
             self.test_authenticated_admin_list()
-            self.test_authenticated_cover_upload()
+            unused_cover = self.test_authenticated_cover_upload()
+            self.test_cover_list_contains_upload(unused_cover, expected_used=False)
+            self.test_unused_cover_can_be_deleted(unused_cover)
             self.test_non_image_upload_rejected()
+            used_cover = self.upload_cover("used-cover.png")
 
             draft = self.create_post(
                 {
                     "title": f"Smoke Draft {suffix}",
                     "summary": "Smoke draft summary.",
                     "content_markdown": "# Smoke Draft",
+                    "cover_url": used_cover.get("cover_url", ""),
                     "status": "draft",
                     "category": "Tests",
                     "tags": ["smoke", "draft"],
@@ -82,6 +86,8 @@ class SmokeTest:
                 },
                 "draft",
             )
+            self.test_cover_list_contains_upload(used_cover, expected_used=True, expected_post_id=draft.get("id"))
+            self.test_used_cover_cannot_be_deleted(used_cover)
             self.check_admin_contains(draft_slug, True, "draft post appears in admin list")
             self.check_public_contains(draft_slug, False, "draft post is hidden from public list")
 
@@ -157,11 +163,11 @@ class SmokeTest:
             str(payload),
         )
 
-    def test_authenticated_cover_upload(self) -> None:
+    def upload_cover(self, filename: str = "cover.png") -> dict:
         response = self.client.post(
             "/api/v1/admin/uploads/cover",
             headers=self.auth_headers(),
-            files={"file": ("cover.png", self.tiny_png(), "image/png")},
+            files={"file": (filename, self.tiny_png(), "image/png")},
         )
         try:
             payload = response.json()
@@ -190,6 +196,66 @@ class SmokeTest:
                 uploaded.status_code == 200 and uploaded.content.startswith(b"\x89PNG\r\n\x1a\n"),
                 f"status {uploaded.status_code}",
             )
+
+        return payload
+
+    def test_authenticated_cover_upload(self) -> dict:
+        return self.upload_cover()
+
+    def test_cover_list_contains_upload(
+        self,
+        cover: dict,
+        expected_used: bool,
+        expected_post_id: int | None = None,
+    ) -> None:
+        cover_path = cover.get("path")
+        status_code, payload = self.get_json("/api/v1/admin/uploads/covers", self.auth_headers())
+        items = payload.get("items", [])
+        match = next((item for item in items if item.get("path") == cover_path), None)
+        used_by_post_ids = match.get("used_by_post_ids", []) if isinstance(match, dict) else []
+
+        self.check(
+            "GET /api/v1/admin/uploads/covers includes uploaded cover",
+            status_code == 200
+            and isinstance(payload.get("total"), int)
+            and isinstance(match, dict)
+            and match.get("filename")
+            and match.get("cover_url", "").endswith(cover_path or "")
+            and isinstance(match.get("size_bytes"), int)
+            and isinstance(match.get("modified_at"), str)
+            and match.get("used") is expected_used
+            and isinstance(used_by_post_ids, list)
+            and (expected_post_id is None or expected_post_id in used_by_post_ids),
+            str(payload),
+        )
+
+    def test_unused_cover_can_be_deleted(self, cover: dict) -> None:
+        path = cover.get("path")
+        filename = path.rsplit("/", 1)[-1] if isinstance(path, str) else ""
+        response = self.client.delete(f"/api/v1/admin/uploads/covers/{filename}", headers=self.auth_headers())
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = {}
+
+        self.check(
+            "DELETE /api/v1/admin/uploads/covers/{filename} deletes unused cover",
+            response.status_code == 200 and payload == {"status": "deleted", "filename": filename},
+            str(payload),
+        )
+
+        if isinstance(path, str) and response.status_code == 200 and path in self.created_upload_paths:
+            self.created_upload_paths.remove(path)
+
+    def test_used_cover_cannot_be_deleted(self, cover: dict) -> None:
+        path = cover.get("path")
+        filename = path.rsplit("/", 1)[-1] if isinstance(path, str) else ""
+        response = self.client.delete(f"/api/v1/admin/uploads/covers/{filename}", headers=self.auth_headers())
+        self.check(
+            "DELETE /api/v1/admin/uploads/covers/{filename} rejects used cover",
+            response.status_code == 409,
+            response.text,
+        )
 
     def test_non_image_upload_rejected(self) -> None:
         response = self.client.post(
