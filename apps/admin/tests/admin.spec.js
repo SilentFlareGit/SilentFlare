@@ -50,6 +50,16 @@ async function cleanupPosts(request, token, slugPrefix = TEST_SLUG_PREFIX) {
   }
 }
 
+async function deleteCoverThroughApi(request, token, filename) {
+  if (!filename) return
+
+  await request.delete(`${API_BASE_URL}/admin/uploads/covers/${encodeURIComponent(filename)}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 async function fillMarkdownEditor(page, value) {
   const editor = page.getByTestId('post-content-editor').locator('.CodeMirror').first()
   await editor.click()
@@ -142,6 +152,48 @@ async function uploadTinyCoverImage(page) {
   return coverUrl
 }
 
+async function uploadUnusedCoverImage(request, token, uniqueId) {
+  const response = await request.post(`${API_BASE_URL}/admin/uploads/cover`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    multipart: {
+      file: {
+        name: `unused-cover-e2e-${uniqueId}.png`,
+        mimeType: 'image/png',
+        buffer: Buffer.from(TINY_PNG_BASE64, 'base64'),
+      },
+    },
+  })
+
+  expect(response.ok()).toBeTruthy()
+  const body = await response.json()
+  const coverUrl = body.cover_url || body.coverUrl || body.url || body.location
+  expect(coverUrl).toBeTruthy()
+
+  const filename = filenameFromCoverUrl(coverUrl)
+  expect(filename).toBeTruthy()
+
+  return { coverUrl, filename }
+}
+
+async function expectCanDeleteUnusedCoverMedia(page, filename) {
+  await page.getByTestId('nav-media').click()
+  await expect(page).toHaveURL(/#\/media$/)
+  await page.getByTestId('media-refresh').click()
+  await expect(page.getByTestId('media-table')).toBeVisible()
+
+  const row = page.getByTestId(`media-row-${filename}`)
+  await expect(row).toBeVisible()
+
+  const deleteButton = row.getByTestId(`delete-media-${filename}`)
+  await expect(deleteButton).toBeVisible()
+
+  page.once('dialog', dialog => dialog.accept())
+  await deleteButton.click()
+  await expect(row).toHaveCount(0)
+}
+
 test('admin can manage a draft post end to end', async ({ page, request }) => {
   const token = await loginThroughApi(request)
   await cleanupPosts(request, token)
@@ -152,6 +204,8 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
   const updatedSummary = `Updated by Playwright ${uniqueId}`
   const previewBody = `Initial E2E content ${uniqueId}.`
   let uploadedCoverUrl = ''
+  let unusedCoverFilename = ''
+  let unusedCoverDeleted = false
 
   try {
     await page.goto('/')
@@ -185,6 +239,10 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await expectNoRowPublicLink(row)
     await expectRowCoverThumbnail(page, slug, uploadedCoverUrl)
     await expectMediaPageShowsUsedCover(page, uploadedCoverUrl)
+    const unusedCover = await uploadUnusedCoverImage(request, token, uniqueId)
+    unusedCoverFilename = unusedCover.filename
+    await expectCanDeleteUnusedCoverMedia(page, unusedCoverFilename)
+    unusedCoverDeleted = true
 
     await page.goto('/#/posts')
     await expect(page.getByTestId('posts-table')).toBeVisible()
@@ -241,6 +299,9 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await page.getByTestId(`delete-post-${slug}`).click()
     await expect(row).toBeHidden()
   } finally {
+    if (unusedCoverFilename && !unusedCoverDeleted) {
+      await deleteCoverThroughApi(request, token, unusedCoverFilename)
+    }
     await cleanupPosts(request, token, slug)
   }
 })
