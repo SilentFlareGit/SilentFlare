@@ -79,6 +79,17 @@ async function expectNoRowPublicLink(row) {
   await expect(row.getByRole('link', { name: /^View$/i })).toHaveCount(0)
 }
 
+async function expectRowCoverThumbnail(page, slug, coverUrl) {
+  const coverCell = page.getByTestId(`post-cover-${slug}`)
+  await expect(coverCell).toBeVisible()
+  await expect(coverCell).not.toContainText('No cover')
+
+  const thumbnail = coverCell.getByTestId('cover-thumb')
+  await expect(thumbnail).toBeVisible()
+  const thumbnailSrc = await thumbnail.getAttribute('src')
+  expect(thumbnailSrc === coverUrl || thumbnailSrc?.includes('/uploads/covers/')).toBeTruthy()
+}
+
 async function expectDraftVisibilityHint(page) {
   await expect(
     page.getByText(/draft.*(not.*public|not publicly visible|only visible|private)|not.*public.*draft/i)
@@ -150,6 +161,7 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await expect(row).toContainText(title)
     await expect(row).toContainText('draft')
     await expectNoRowPublicLink(row)
+    await expectRowCoverThumbnail(page, slug, uploadedCoverUrl)
 
     await page.getByTestId('post-search').fill(slug)
     await expect(row).toBeVisible()
