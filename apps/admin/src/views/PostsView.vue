@@ -48,6 +48,7 @@
       <thead>
         <tr>
           <th>ID</th>
+          <th>Cover</th>
           <th>Title</th>
           <th>Status</th>
           <th>Category</th>
@@ -58,10 +59,20 @@
       </thead>
       <tbody>
         <tr v-if="filteredPosts.length === 0">
-          <td colspan="7" style="text-align:center;padding:24px;color:#999">No posts found.</td>
+          <td colspan="8" style="text-align:center;padding:24px;color:#999">No posts found.</td>
         </tr>
         <tr v-for="post in filteredPosts" :key="post.id" :data-testid="`post-row-${post.slug}`">
           <td>{{ post.id }}</td>
+          <td :data-testid="`post-cover-${post.slug}`">
+            <img
+              v-if="post.cover_url"
+              :src="post.cover_url"
+              :alt="`Cover for ${post.title}`"
+              data-testid="cover-thumb"
+              style="width:72px;height:40px;object-fit:cover;border-radius:3px;display:block"
+            />
+            <span v-else style="color:#999;font-size:12px">No cover</span>
+          </td>
           <td>{{ post.title }}</td>
           <td>
             <span class="badge" :class="post.status === 'published' ? 'badge-published' : 'badge-draft'">
