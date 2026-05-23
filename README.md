@@ -8,7 +8,7 @@ high-level project map for future AI-assisted work.
 
 - `apps/api`: FastAPI backend with public blog APIs, admin post CRUD APIs, and authenticated cover image upload at `POST /api/v1/admin/uploads/cover`.
 - `apps/blog`: Astro/Yukina public blog frontend. It reads published posts from the backend public APIs.
-- `apps/admin`: Vue 3 + Vite admin frontend with login, posts CRUD, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public view links, cover image upload, cover URL auto-fill, cover preview, and Playwright E2E coverage.
+- `apps/admin`: Vue 3 + Vite admin frontend with login, posts CRUD, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public view links, cover image upload, cover URL auto-fill, cover preview, posts-list cover thumbnails, and Playwright E2E coverage.
 - `docs/API_CONTRACT.md`: Current API contract for public and admin endpoints.
 - `.github/workflows/ci.yml`: GitHub Actions CI for admin build, API smoke test, blog build, and admin E2E.
 
@@ -108,7 +108,7 @@ cd apps\admin
 npm run test:e2e
 ```
 
-Local admin E2E requires the API backend running unless CI starts it for the job. The suite covers login, create/edit/delete, publish/unpublish, Markdown preview, public links, and cover upload.
+Local admin E2E requires the API backend running unless CI starts it for the job. The suite covers login, create/edit/delete, publish/unpublish, Markdown preview, public links, cover upload, cover URL persistence, edit-form preview, and posts-list thumbnail display.
 
 Backend smoke test:
 
@@ -131,13 +131,13 @@ GitHub Actions runs on push and pull request to `main`:
 - Admin build: installs `apps/admin` dependencies and runs `npm run build`.
 - API smoke test: installs `apps/api` dependencies, compiles backend code, starts Uvicorn, and runs `scripts/smoke_test.py`.
 - Blog build: installs `apps/blog` dependencies, starts the backend, and runs `pnpm run build`.
-- Admin E2E: runs the Playwright admin test suite with the backend available in CI, including cover upload coverage.
+- Admin E2E: runs the Playwright admin test suite with the backend available in CI, including cover upload and posts-list thumbnail coverage.
 
 ## Current Status
 
-- API provides public blog APIs, admin post CRUD, and authenticated cover image upload.
+- API provides public blog APIs, admin post CRUD, and authenticated cover image upload. Uploaded cover files are served under `/uploads/covers/...`.
 - Blog reads published posts from the backend.
-- Admin supports login, posts CRUD, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public View links, View Public Post links, cover image upload, cover URL auto-fill, and cover preview.
+- Admin supports login, posts CRUD, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public View links, View Public Post links, cover image upload, cover URL auto-fill, cover preview, posts-list cover thumbnails, and a `No cover` hint for posts without `cover_url`.
 - CI covers admin build, API smoke test, blog build, and admin Playwright E2E.
 
 ## Notes
@@ -145,6 +145,6 @@ GitHub Actions runs on push and pull request to `main`:
 - Blog build needs the backend API running.
 - Admin uses `VITE_API_BASE_URL` and `VITE_PUBLIC_BLOG_BASE_URL`.
 - Blog uses `PUBLIC_API_BASE_URL`.
-- Uploaded files are served by the API under `/uploads`.
+- Uploaded files are served by the API under `/uploads`, including cover images under `/uploads/covers/...`.
 - Local backend may run on `8001` if `8000` is blocked on Windows.
 - Do not put real secrets into `.env.example` files or this README.
