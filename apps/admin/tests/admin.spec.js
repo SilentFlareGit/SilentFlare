@@ -90,6 +90,28 @@ async function expectRowCoverThumbnail(page, slug, coverUrl) {
   expect(thumbnailSrc === coverUrl || thumbnailSrc?.includes('/uploads/covers/')).toBeTruthy()
 }
 
+function filenameFromCoverUrl(coverUrl) {
+  try {
+    return new URL(coverUrl).pathname.split('/').pop()
+  } catch {
+    return coverUrl.split(/[?#]/)[0].split('/').pop()
+  }
+}
+
+async function expectMediaPageShowsUsedCover(page, coverUrl) {
+  const filename = filenameFromCoverUrl(coverUrl)
+  expect(filename).toBeTruthy()
+
+  await page.getByTestId('nav-media').click()
+  await expect(page).toHaveURL(/#\/media$/)
+  await expect(page.getByTestId('media-table')).toBeVisible()
+
+  const row = page.getByTestId(`media-row-${filename}`)
+  await expect(row).toBeVisible()
+  await expect(row.getByTestId(`in-use-${filename}`)).toBeVisible()
+  await expect(row.getByTestId(`delete-media-${filename}`)).toHaveCount(0)
+}
+
 async function expectDraftVisibilityHint(page) {
   await expect(
     page.getByText(/draft.*(not.*public|not publicly visible|only visible|private)|not.*public.*draft/i)
@@ -162,6 +184,10 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await expect(row).toContainText('draft')
     await expectNoRowPublicLink(row)
     await expectRowCoverThumbnail(page, slug, uploadedCoverUrl)
+    await expectMediaPageShowsUsedCover(page, uploadedCoverUrl)
+
+    await page.goto('/#/posts')
+    await expect(page.getByTestId('posts-table')).toBeVisible()
 
     await page.getByTestId('post-search').fill(slug)
     await expect(row).toBeVisible()
