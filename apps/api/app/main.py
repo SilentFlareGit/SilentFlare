@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from app.db.session import init_db
 from app.routers.admin_posts import router as admin_posts_router
+from app.routers.admin_uploads import router as admin_uploads_router
 from app.routers.auth import router as auth_router
 from app.routers.public_posts import router as public_posts_router
 
@@ -34,6 +35,7 @@ app.add_middleware(
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 app.include_router(auth_router)
 app.include_router(admin_posts_router)
+app.include_router(admin_uploads_router)
 app.include_router(public_posts_router)
 
 

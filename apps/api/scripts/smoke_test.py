@@ -1,6 +1,7 @@
 import argparse
 import sys
 import time
+from pathlib import Path
 from uuid import uuid4
 
 import httpx
@@ -14,6 +15,7 @@ class SmokeTest:
         self.client = httpx.Client(base_url=self.base_url, timeout=10.0)
         self.token: str | None = None
         self.created_ids: list[int] = []
+        self.created_upload_paths: list[str] = []
         self.failures: list[str] = []
 
     def auth_headers(self) -> dict[str, str]:
@@ -63,7 +65,10 @@ class SmokeTest:
             self.test_public_posts_load()
             self.test_login()
             self.test_unauthenticated_admin_rejected()
+            self.test_unauthenticated_upload_rejected()
             self.test_authenticated_admin_list()
+            self.test_authenticated_cover_upload()
+            self.test_non_image_upload_rejected()
 
             draft = self.create_post(
                 {
@@ -137,6 +142,13 @@ class SmokeTest:
         status_code, _ = self.get_json("/api/v1/admin/posts")
         self.check("GET /api/v1/admin/posts without auth", status_code in {401, 403}, f"status {status_code}")
 
+    def test_unauthenticated_upload_rejected(self) -> None:
+        response = self.client.post(
+            "/api/v1/admin/uploads/cover",
+            files={"file": ("cover.png", self.tiny_png(), "image/png")},
+        )
+        self.check("POST /api/v1/admin/uploads/cover without auth", response.status_code in {401, 403}, response.text)
+
     def test_authenticated_admin_list(self) -> None:
         status_code, payload = self.get_json("/api/v1/admin/posts", self.auth_headers())
         self.check(
@@ -144,6 +156,48 @@ class SmokeTest:
             status_code == 200 and isinstance(payload.get("items"), list),
             str(payload),
         )
+
+    def test_authenticated_cover_upload(self) -> None:
+        response = self.client.post(
+            "/api/v1/admin/uploads/cover",
+            headers=self.auth_headers(),
+            files={"file": ("cover.png", self.tiny_png(), "image/png")},
+        )
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = {}
+
+        path = payload.get("path")
+        if isinstance(path, str):
+            self.created_upload_paths.append(path)
+
+        self.check(
+            "POST /api/v1/admin/uploads/cover with auth",
+            response.status_code == 200
+            and isinstance(payload.get("cover_url"), str)
+            and payload["cover_url"].endswith(path or "")
+            and isinstance(path, str)
+            and path.startswith("/uploads/covers/")
+            and path.endswith(".png"),
+            str(payload),
+        )
+
+        if isinstance(path, str):
+            uploaded = self.client.get(path)
+            self.check(
+                "GET uploaded cover file",
+                uploaded.status_code == 200 and uploaded.content.startswith(b"\x89PNG\r\n\x1a\n"),
+                f"status {uploaded.status_code}",
+            )
+
+    def test_non_image_upload_rejected(self) -> None:
+        response = self.client.post(
+            "/api/v1/admin/uploads/cover",
+            headers=self.auth_headers(),
+            files={"file": ("cover.txt", b"not an image", "text/plain")},
+        )
+        self.check("POST /api/v1/admin/uploads/cover rejects non-image", response.status_code == 400, response.text)
 
     def create_post(self, payload: dict, expected_status: str) -> dict:
         status_code, data = self.post_json("/api/v1/admin/posts", payload, self.auth_headers())
@@ -216,11 +270,33 @@ class SmokeTest:
         response = self.client.get("/docs")
         self.check("GET /docs", response.status_code == 200 and "Swagger UI" in response.text, f"status {response.status_code}")
 
+    def tiny_png(self) -> bytes:
+        return (
+            b"\x89PNG\r\n\x1a\n"
+            b"\x00\x00\x00\rIHDR"
+            b"\x00\x00\x00\x01\x00\x00\x00\x01"
+            b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
+            b"\x00\x00\x00\nIDATx\x9cc`\x00\x00\x00\x02\x00\x01"
+            b"\xe2!\xbc3"
+            b"\x00\x00\x00\x00IEND\xaeB`\x82"
+        )
+
     def cleanup(self) -> None:
         for post_id in list(self.created_ids):
             try:
                 self.client.delete(f"/api/v1/admin/posts/{post_id}", headers=self.auth_headers())
             except httpx.HTTPError:
+                pass
+
+        for upload_path in list(self.created_upload_paths):
+            try:
+                path = Path(*upload_path.lstrip("/").split("/"))
+                file_path = Path(__file__).resolve().parents[1] / path
+                if file_path.is_file() and file_path.resolve().is_relative_to(
+                    (Path(__file__).resolve().parents[1] / "uploads" / "covers").resolve()
+                ):
+                    file_path.unlink()
+            except OSError:
                 pass
 
 

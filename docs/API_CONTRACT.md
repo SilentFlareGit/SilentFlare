@@ -103,6 +103,24 @@ Response:
 }
 ```
 
+### POST /api/v1/admin/uploads/cover
+
+Requires authentication. Uploads a cover image and returns a `cover_url` string
+that can be saved in a post.
+
+Request: `multipart/form-data`
+
+- `file`: image file. Supported types: JPEG, PNG, WebP, GIF.
+
+Response:
+
+```json
+{
+  "cover_url": "http://127.0.0.1:8000/uploads/covers/6f1f7f4f0b784b3e8f98d0f01cfc3a2d.png",
+  "path": "/uploads/covers/6f1f7f4f0b784b3e8f98d0f01cfc3a2d.png"
+}
+```
+
 ### GET /api/v1/admin/posts
 
 Requires authentication. Lists both draft and published posts.
