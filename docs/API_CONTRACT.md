@@ -150,6 +150,10 @@ Response:
 Requires authentication. Deletes an unused cover file. Files referenced by any
 post `cover_url` return `409 Conflict` and are not deleted.
 
+The admin `/media` page uses these cover APIs for cleanup: used files are shown
+as `Used` / `In use` without a delete action, while unused files expose a
+`Delete` button.
+
 Response:
 
 ```json
@@ -290,8 +294,14 @@ The backend reads these environment variables:
 Local example credentials are documented in `apps/api/.env.example`. Do not use
 the example secret values in production.
 
+Start the local backend on `8011` when the usual ports are occupied:
+
+```cmd
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8011
+```
+
 Run the backend smoke test from `apps/api`:
 
 ```cmd
-python scripts\smoke_test.py --base-url http://127.0.0.1:8000
+python scripts\smoke_test.py --base-url http://127.0.0.1:8011
 ```
