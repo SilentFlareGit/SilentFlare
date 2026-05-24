@@ -112,6 +112,18 @@
         <input id="published_at" v-model="form.published_at" data-testid="post-published-at" type="text" />
       </div>
 
+      <fieldset class="seo-section">
+        <legend>SEO</legend>
+        <div class="form-group">
+          <label for="seo_title">SEO Title</label>
+          <input id="seo_title" v-model="form.seo_title" data-testid="post-seo-title" type="text" />
+        </div>
+        <div class="form-group">
+          <label for="meta_description">Meta Description</label>
+          <textarea id="meta_description" v-model="form.meta_description" data-testid="post-meta-description" rows="3"></textarea>
+        </div>
+      </fieldset>
+
       <button type="submit" class="btn btn-primary" :disabled="saving" data-testid="post-submit">
         {{ saving ? 'Saving...' : (isEdit ? 'Update Post' : 'Create Post') }}
       </button>
@@ -155,6 +167,8 @@ const form = ref({
   status: 'draft',
   category: '',
   published_at: '',
+  seo_title: '',
+  meta_description: '',
 })
 
 const tagsInput = ref('')
@@ -236,6 +250,8 @@ onMounted(async () => {
       status: post.status || 'draft',
       category: post.category || '',
       published_at: post.published_at || '',
+      seo_title: post.seo_title || '',
+      meta_description: post.meta_description || '',
     }
     tagsInput.value = (post.tags || []).join(', ')
   } catch (e) {
