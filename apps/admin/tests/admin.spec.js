@@ -247,6 +247,26 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await expectCanDeleteUnusedCoverMedia(page, unusedCoverFilename)
     unusedCoverDeleted = true
 
+    // Test Preview from row
+    await page.goto('/#/posts')
+    await expect(page.getByTestId('posts-table')).toBeVisible()
+    const previewBtn = row.getByTestId(`preview-post-${slug}`)
+    await expect(previewBtn).toBeVisible()
+    await previewBtn.click()
+
+    await expect(page.getByTestId('post-preview')).toBeVisible()
+    await expect(page.getByTestId('preview-title')).toHaveText(title)
+    await expect(page.getByTestId('preview-content')).toContainText('Initial E2E content')
+    
+    // Test Preview from edit form
+    await page.getByTestId('preview-back-link').click()
+    await expect(page.getByTestId('post-form')).toBeVisible()
+    await expect(page.getByTestId('preview-current-post')).toBeVisible()
+    await page.getByTestId('preview-current-post').click()
+    
+    await expect(page.getByTestId('post-preview')).toBeVisible()
+    await expect(page.getByTestId('preview-title')).toHaveText(title)
+
     await page.goto('/#/posts')
     await expect(page.getByTestId('posts-table')).toBeVisible()
     const countSummary = page.getByTestId('posts-count-summary')

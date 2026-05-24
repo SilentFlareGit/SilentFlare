@@ -16,6 +16,13 @@
           class="btn btn-secondary"
           style="font-size:13px;padding:6px 12px"
         >View Public Post</a>
+        <router-link
+          v-if="isEdit"
+          :to="`/posts/${postId}/preview`"
+          class="btn btn-secondary"
+          data-testid="preview-current-post"
+          style="font-size:13px;padding:6px 12px"
+        >Preview</router-link>
         <router-link to="/posts" class="btn btn-secondary">← Back</router-link>
       </div>
     </div>

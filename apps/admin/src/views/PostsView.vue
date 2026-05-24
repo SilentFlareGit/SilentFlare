@@ -113,6 +113,9 @@
             >
               {{ post._toggling ? '...' : (post.status === 'draft' ? 'Publish' : 'Unpublish') }}
             </button>
+            <router-link :to="`/posts/${post.id}/preview`" class="btn btn-secondary mr-8" :data-testid="`preview-post-${post.slug}`" style="padding:4px 10px;font-size:12px;margin-right:4px">
+              Preview
+            </router-link>
             <router-link :to="`/posts/${post.id}/edit`" class="btn btn-secondary mr-8" :data-testid="`edit-post-${post.slug}`" style="padding:4px 10px;font-size:12px">
               Edit
             </router-link>

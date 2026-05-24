@@ -11,6 +11,7 @@ const routes = [
   { path: '/posts', name: 'Posts', component: PostsView },
   { path: '/posts/new', name: 'NewPost', component: PostFormView },
   { path: '/posts/:id/edit', name: 'EditPost', component: PostFormView, props: true },
+  { path: '/posts/:id/preview', name: 'PreviewPost', component: () => import('./views/PostPreviewView.vue'), props: true },
   { path: '/media', name: 'Media', component: MediaView },
   { path: '/', redirect: '/posts' },
 ]
