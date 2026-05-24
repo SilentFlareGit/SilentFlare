@@ -12,12 +12,14 @@ export interface Props {
   subTitle?: string;
   bannerImage?: string;
   slug?: string;
+  seoTitle?: string;
+  metaDescription?: string;
 }
 
 const props = Astro.props;
 ---
 
-<Base>
+<Base seoTitle={props.seoTitle} metaDescription={props.metaDescription}>
   <NavBar />
 
   {

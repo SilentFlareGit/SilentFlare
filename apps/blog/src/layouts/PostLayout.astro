@@ -14,6 +14,8 @@ interface Props {
   };
   author?: string;
   sourceLink?: string;
+  seoTitle?: string;
+  metaDescription?: string;
 }
 
 const {
@@ -24,10 +26,12 @@ const {
   license,
   author,
   sourceLink,
+  seoTitle,
+  metaDescription,
 } = Astro.props;
 ---
 
-<Main title={title} subTitle={subTitle} bannerImage={bannerImage}>
+<Main title={title} subTitle={subTitle} bannerImage={bannerImage} seoTitle={seoTitle} metaDescription={metaDescription}>
   <!-- <Fragment set:html={tocHTMLString} /> -->
   <div class="article-wrapper">
     <div class="article">

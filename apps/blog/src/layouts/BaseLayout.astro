@@ -1,10 +1,17 @@
 ---
 import YukinaConfig from "../../yukina.config";
 import BaseHead from "../components/BaseHead.astro";
+
+interface Props {
+  seoTitle?: string;
+  metaDescription?: string;
+}
+
+const { seoTitle, metaDescription } = Astro.props;
 ---
 
 <html lang={YukinaConfig.locale}>
-  <BaseHead />
+  <BaseHead seoTitle={seoTitle} metaDescription={metaDescription} />
   <body class="overflow-y-hidden">
     <slot />
   </body>

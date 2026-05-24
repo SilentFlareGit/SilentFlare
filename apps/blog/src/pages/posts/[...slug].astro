@@ -28,6 +28,8 @@ export async function getStaticPaths() {
           tags: fullPost.tags,
           description: fullPost.summary,
           cover: fullPost.cover_url,
+          seo_title: fullPost.seo_title || "",
+          meta_description: fullPost.meta_description || "",
           author: "SilentFlare",
           licenseName: undefined,
           licenseUrl: undefined,
@@ -50,6 +52,9 @@ export async function getStaticPaths() {
 
 const { entry, isApi, contentHtml } = Astro.props;
 
+const seoTitle = entry.data.seo_title || entry.data.title;
+const metaDescription = entry.data.meta_description || entry.data.description || "";
+
 let Content = null;
 if (!isApi) {
   const rendered = await render(entry);
@@ -64,6 +69,8 @@ if (!isApi) {
       subTitle={entry.data.description}
       bannerImage={entry.data.cover}
       published={entry.data.published}
+      seoTitle={seoTitle}
+      metaDescription={metaDescription}
     >
       <div
         class="hidden"
@@ -93,6 +100,8 @@ if (!isApi) {
       license={{ name: entry.data.licenseName, url: entry.data.licenseUrl }}
       author={entry.data.author}
       sourceLink={entry.data.sourceLink}
+      seoTitle={seoTitle}
+      metaDescription={metaDescription}
     >
       <div
         class="hidden"
