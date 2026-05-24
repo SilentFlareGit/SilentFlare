@@ -2,6 +2,8 @@
 import Main from "../layouts/MainLayout.astro";
 import Markdown from "../components/Markdown.astro";
 import CopyRight from "../components/misc/CopyRight.astro";
+import { Icon } from "astro-icon/components";
+import { IdToSlug } from "../utils/hash";
 
 interface Props {
   title?: string;
@@ -16,6 +18,8 @@ interface Props {
   sourceLink?: string;
   seoTitle?: string;
   metaDescription?: string;
+  category?: string;
+  tags?: string[];
 }
 
 const {
@@ -28,16 +32,40 @@ const {
   sourceLink,
   seoTitle,
   metaDescription,
+  category,
+  tags,
 } = Astro.props;
+
+const hasTags = Array.isArray(tags) && tags.length > 0;
 ---
 
 <Main title={title} subTitle={subTitle} bannerImage={bannerImage} seoTitle={seoTitle} metaDescription={metaDescription}>
   <!-- <Fragment set:html={tocHTMLString} /> -->
   <div class="article-wrapper">
     <div class="article">
+      {category && (
+        <div class="post-meta-bar">
+          <a class="category-badge" href={`/categories/${IdToSlug(category)}`}>
+            <Icon name="dashicons:category" class="meta-icon" />
+            {category}
+          </a>
+        </div>
+      )}
       <Markdown>
         <slot />
       </Markdown>
+      {hasTags && (
+        <div class="post-tags-bar">
+          <Icon name="mdi:tag-outline" class="meta-icon" />
+          <ul class="tags-list">
+            {tags.map((tag) => (
+              <li>
+                <a class="tag-link" href={`/tags/${IdToSlug(tag)}`}>{tag}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {
         published && title && (
           <CopyRight
@@ -60,5 +88,33 @@ const {
   .article {
     @apply flex flex-col;
     font-size: var(--primary-font);
+  }
+  .post-meta-bar {
+    @apply mb-4 flex flex-row items-center gap-2;
+    font-family: var(--primary-font);
+  }
+  .category-badge {
+    @apply inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm text-[var(--text-color-lighten)] transition-all;
+    @apply hover:bg-[var(--primary-color-lighten)] hover:text-[var(--primary-color)];
+    background: var(--background-color);
+  }
+  .post-tags-bar {
+    @apply mt-6 flex flex-row flex-wrap items-center gap-2 border-t border-gray-200 pt-4 dark:border-gray-700;
+    font-family: var(--primary-font);
+  }
+  .meta-icon {
+    @apply text-[var(--text-color-lighten)];
+    width: 1em;
+    height: 1em;
+  }
+  .tags-list {
+    @apply flex flex-row flex-wrap items-center gap-1.5;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .tag-link {
+    @apply inline-block rounded-md px-2 py-0.5 text-sm text-[var(--text-color-lighten)] transition-all;
+    @apply hover:bg-[var(--primary-color-lighten)] hover:text-[var(--primary-color)];
   }
 </style>
