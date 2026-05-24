@@ -90,12 +90,11 @@ const { time, wordCount } = props.readingMetadata;
             props.category && (
               <li class="data space-x-1.5">
                 <PostCardInfoIcon name="dashicons:category" />
-                <a
-                  class="select-none rounded-md px-1.5 py-0.5 text-[var(--text-color-lighten)] transition-all hover:bg-[var(--primary-color-lighten)] hover:text-[var(--primary-color)]"
-                  href={`/categories/${IdToSlug(props.category)}`}
+                <span
+                  class="select-none rounded-md px-1.5 py-0.5 text-[var(--text-color-lighten)]"
                 >
                   {props.category}
-                </a>
+                </span>
               </li>
             )
           }
@@ -110,12 +109,11 @@ const { time, wordCount } = props.readingMetadata;
                     {props.tags.slice(0, 3).map((tag, index) => (
                       <li class="flex select-none flex-row items-center text-[var(--text-color-lighten)]">
                         {index > 0 && <span class="pr-1">/</span>}
-                        <a
-                          class="rounded-md px-1.5 py-0.5 transition-all hover:bg-[var(--primary-color-lighten)] hover:text-[var(--primary-color)]"
-                          href={`/tags/${IdToSlug(tag)}`}
+                        <span
+                          class="rounded-md px-1.5 py-0.5"
                         >
                           {tag}
-                        </a>
+                        </span>
                       </li>
                     ))}
                   </ul>

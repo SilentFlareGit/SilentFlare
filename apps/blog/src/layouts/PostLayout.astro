@@ -3,7 +3,6 @@ import Main from "../layouts/MainLayout.astro";
 import Markdown from "../components/Markdown.astro";
 import CopyRight from "../components/misc/CopyRight.astro";
 import { Icon } from "astro-icon/components";
-import { IdToSlug } from "../utils/hash";
 
 interface Props {
   title?: string;
@@ -45,10 +44,10 @@ const hasTags = Array.isArray(tags) && tags.length > 0;
     <div class="article">
       {category && (
         <div class="post-meta-bar">
-          <a class="category-badge" href={`/categories/${IdToSlug(category)}`}>
+          <span class="category-badge">
             <Icon name="dashicons:category" class="meta-icon" />
             {category}
-          </a>
+          </span>
         </div>
       )}
       <Markdown>
@@ -60,7 +59,7 @@ const hasTags = Array.isArray(tags) && tags.length > 0;
           <ul class="tags-list">
             {tags.map((tag) => (
               <li>
-                <a class="tag-link" href={`/tags/${IdToSlug(tag)}`}>{tag}</a>
+                <span class="tag-badge">{tag}</span>
               </li>
             ))}
           </ul>
@@ -113,8 +112,7 @@ const hasTags = Array.isArray(tags) && tags.length > 0;
     margin: 0;
     padding: 0;
   }
-  .tag-link {
-    @apply inline-block rounded-md px-2 py-0.5 text-sm text-[var(--text-color-lighten)] transition-all;
-    @apply hover:bg-[var(--primary-color-lighten)] hover:text-[var(--primary-color)];
+  .tag-badge {
+    @apply inline-block rounded-md px-2 py-0.5 text-sm text-[var(--text-color-lighten)];
   }
 </style>
