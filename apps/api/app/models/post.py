@@ -21,6 +21,8 @@ class Post(SQLModel, table=True):
     title: str
     slug: str = Field(sa_column=Column(String, unique=True, index=True, nullable=False))
     summary: str
+    seo_title: str = ""
+    meta_description: str = ""
     content_markdown: str
     cover_url: str
     status: str = Field(default=PostStatus.published.value)

@@ -13,6 +13,8 @@ class PostListItem(BaseModel):
     title: str
     slug: str
     summary: str
+    seo_title: str
+    meta_description: str
     cover_url: str
     category: str
     tags: list[str]
@@ -31,6 +33,8 @@ class PostDetailResponse(BaseModel):
     title: str
     slug: str
     summary: str
+    seo_title: str
+    meta_description: str
     content_markdown: str
     cover_url: str
     category: str
@@ -42,6 +46,8 @@ class AdminPostCreate(BaseModel):
     title: str
     slug: str | None = None
     summary: str
+    seo_title: str = ""
+    meta_description: str = ""
     content_markdown: str
     cover_url: str = ""
     status: PostStatusValue = "draft"
@@ -54,6 +60,8 @@ class AdminPostUpdate(BaseModel):
     title: str | None = None
     slug: str | None = None
     summary: str | None = None
+    seo_title: str | None = None
+    meta_description: str | None = None
     content_markdown: str | None = None
     cover_url: str | None = None
     status: PostStatusValue | None = None
@@ -69,6 +77,8 @@ class AdminPostResponse(BaseModel):
     title: str
     slug: str
     summary: str
+    seo_title: str
+    meta_description: str
     content_markdown: str
     cover_url: str
     status: PostStatusValue

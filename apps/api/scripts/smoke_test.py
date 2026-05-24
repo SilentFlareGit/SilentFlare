@@ -77,6 +77,8 @@ class SmokeTest:
                 {
                     "title": f"Smoke Draft {suffix}",
                     "summary": "Smoke draft summary.",
+                    "seo_title": f"Smoke Draft SEO {suffix}",
+                    "meta_description": "Smoke draft meta description.",
                     "content_markdown": "# Smoke Draft",
                     "cover_url": used_cover.get("cover_url", ""),
                     "status": "draft",
@@ -95,6 +97,8 @@ class SmokeTest:
                 {
                     "title": f"Smoke Published {suffix}",
                     "summary": "Smoke published summary.",
+                    "seo_title": f"Smoke Published SEO {suffix}",
+                    "meta_description": "Smoke published meta description.",
                     "content_markdown": "# Smoke Published",
                     "status": "published",
                     "category": "Tests",
@@ -103,8 +107,18 @@ class SmokeTest:
                 },
                 "published",
             )
-            self.check_public_contains(published_slug, True, "published post appears in public list")
-            self.test_public_detail(published_slug)
+            self.check_public_contains(
+                published_slug,
+                True,
+                "published post appears in public list",
+                expected_seo_title=published.get("seo_title"),
+                expected_meta_description=published.get("meta_description"),
+            )
+            self.test_public_detail(
+                published_slug,
+                expected_seo_title=published.get("seo_title"),
+                expected_meta_description=published.get("meta_description"),
+            )
             self.test_update_changes_updated_at(draft)
             self.test_delete_removes_from_admin(draft)
             self.test_delete_removes_from_admin(published)
@@ -273,7 +287,11 @@ class SmokeTest:
 
         self.check(
             f"POST /api/v1/admin/posts creates {expected_status}",
-            status_code == 201 and data.get("status") == expected_status and data.get("slug") == payload["slug"],
+            status_code == 201
+            and data.get("status") == expected_status
+            and data.get("slug") == payload["slug"]
+            and data.get("seo_title") == payload["seo_title"]
+            and data.get("meta_description") == payload["meta_description"],
             str(data),
         )
         return data
@@ -283,16 +301,40 @@ class SmokeTest:
         slugs = [item.get("slug") for item in payload.get("items", [])]
         self.check(name, status_code == 200 and (slug in slugs) is expected, str(slugs))
 
-    def check_public_contains(self, slug: str, expected: bool, name: str) -> None:
+    def check_public_contains(
+        self,
+        slug: str,
+        expected: bool,
+        name: str,
+        expected_seo_title: str | None = None,
+        expected_meta_description: str | None = None,
+    ) -> None:
         status_code, payload = self.get_json("/api/v1/posts")
-        slugs = [item.get("slug") for item in payload.get("items", [])]
-        self.check(name, status_code == 200 and (slug in slugs) is expected, str(slugs))
+        items = payload.get("items", [])
+        match = next((item for item in items if item.get("slug") == slug), None)
+        has_expected_seo = (
+            not expected
+            or (
+                isinstance(match, dict)
+                and match.get("seo_title") == expected_seo_title
+                and match.get("meta_description") == expected_meta_description
+            )
+        )
+        self.check(name, status_code == 200 and (match is not None) is expected and has_expected_seo, str(items))
 
-    def test_public_detail(self, slug: str) -> None:
+    def test_public_detail(
+        self,
+        slug: str,
+        expected_seo_title: str | None = None,
+        expected_meta_description: str | None = None,
+    ) -> None:
         status_code, payload = self.get_json(f"/api/v1/posts/{slug}")
         self.check(
             "GET /api/v1/posts/{slug} for published post",
-            status_code == 200 and payload.get("slug") == slug,
+            status_code == 200
+            and payload.get("slug") == slug
+            and payload.get("seo_title") == expected_seo_title
+            and payload.get("meta_description") == expected_meta_description,
             str(payload),
         )
 
@@ -303,7 +345,7 @@ class SmokeTest:
 
         response = self.client.put(
             f"/api/v1/admin/posts/{post_id}",
-            json={"summary": "Updated by smoke test."},
+            json={"summary": "Updated by smoke test.", "meta_description": "Updated smoke test meta description."},
             headers=self.auth_headers(),
         )
         payload = response.json()
@@ -311,6 +353,7 @@ class SmokeTest:
             "PUT /api/v1/admin/posts/{id} changes updated_at",
             response.status_code == 200
             and payload.get("summary") == "Updated by smoke test."
+            and payload.get("meta_description") == "Updated smoke test meta description."
             and payload.get("updated_at") != old_updated_at,
             str(payload),
         )

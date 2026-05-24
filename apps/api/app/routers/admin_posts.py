@@ -81,6 +81,8 @@ def create_admin_post(payload: AdminPostCreate, session: Session = Depends(get_s
         title=payload.title,
         slug=slug,
         summary=payload.summary,
+        seo_title=payload.seo_title,
+        meta_description=payload.meta_description,
         content_markdown=payload.content_markdown,
         cover_url=payload.cover_url,
         status=payload.status,
@@ -114,7 +116,16 @@ def update_admin_post(id: int, payload: AdminPostUpdate, session: Session = Depe
         ensure_unique_slug(session, slug, current_post_id=id)
         post.slug = slug
 
-    for field_name in ["title", "summary", "content_markdown", "cover_url", "category", "tags"]:
+    for field_name in [
+        "title",
+        "summary",
+        "seo_title",
+        "meta_description",
+        "content_markdown",
+        "cover_url",
+        "category",
+        "tags",
+    ]:
         if field_name in data:
             setattr(post, field_name, data[field_name])
 
