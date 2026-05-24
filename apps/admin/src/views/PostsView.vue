@@ -23,8 +23,17 @@
         <option value="draft">Draft</option>
         <option value="published">Published</option>
       </select>
+      <select
+        v-model="seoFilter"
+        data-testid="seo-filter"
+        style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px"
+      >
+        <option value="all">All SEO</option>
+        <option value="ok">SEO OK</option>
+        <option value="missing">Missing SEO</option>
+      </select>
       <button
-        v-if="searchQuery || statusFilter !== 'all'"
+        v-if="searchQuery || statusFilter !== 'all' || seoFilter !== 'all'"
         class="btn btn-secondary"
         data-testid="clear-filters"
         style="padding:6px 12px;font-size:13px"
@@ -137,6 +146,7 @@ const error = ref('')
 // --- Filter state ---
 const searchQuery = ref('')
 const statusFilter = ref('all')
+const seoFilter = ref('all')
 
 // --- Count helpers ---
 const draftCount = computed(() => posts.value.filter(p => p.status === 'draft').length)
@@ -146,6 +156,7 @@ const publishedCount = computed(() => posts.value.filter(p => p.status === 'publ
 function clearFilters() {
   searchQuery.value = ''
   statusFilter.value = 'all'
+  seoFilter.value = 'all'
 }
 
 // --- Computed: filtered + sorted posts ---
@@ -166,6 +177,13 @@ const filteredPosts = computed(() => {
         if (!title.includes(query) && !slug.includes(query) && !category.includes(query)) {
           return false
         }
+      }
+
+      // SEO filter
+      if (seoFilter.value !== 'all') {
+        const hasSeo = (post.seo_title || '').trim() && (post.meta_description || '').trim()
+        if (seoFilter.value === 'ok' && !hasSeo) return false
+        if (seoFilter.value === 'missing' && hasSeo) return false
       }
 
       return true
