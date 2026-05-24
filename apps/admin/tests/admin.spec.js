@@ -239,6 +239,7 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await expect(row).toContainText(title)
     await expect(row).toContainText('draft')
     await expectNoRowPublicLink(row)
+    await expect(page.getByTestId(`post-seo-status-${slug}`)).toHaveText('SEO OK')
     await expectRowCoverThumbnail(page, slug, uploadedCoverUrl)
     await expectMediaPageShowsUsedCover(page, uploadedCoverUrl)
     const unusedCover = await uploadUnusedCoverImage(request, token, uniqueId)

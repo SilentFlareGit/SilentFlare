@@ -159,6 +159,11 @@ main {
   color: #92400e;
 }
 
+.badge-seo-missing {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
 /* Card */
 
 .card {

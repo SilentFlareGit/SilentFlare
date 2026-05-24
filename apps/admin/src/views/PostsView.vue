@@ -52,6 +52,7 @@
           <th>Title</th>
           <th>Status</th>
           <th>Category</th>
+          <th>SEO</th>
           <th>Published</th>
           <th>Updated</th>
           <th>Actions</th>
@@ -59,7 +60,7 @@
       </thead>
       <tbody>
         <tr v-if="filteredPosts.length === 0">
-          <td colspan="8" style="text-align:center;padding:24px;color:#999">No posts found.</td>
+          <td colspan="9" style="text-align:center;padding:24px;color:#999">No posts found.</td>
         </tr>
         <tr v-for="post in filteredPosts" :key="post.id" :data-testid="`post-row-${post.slug}`">
           <td>{{ post.id }}</td>
@@ -80,6 +81,15 @@
             </span>
           </td>
           <td>{{ post.category }}</td>
+          <td>
+            <span
+              class="badge"
+              :class="(post.seo_title || '').trim() && (post.meta_description || '').trim() ? 'badge-published' : 'badge-seo-missing'"
+              :data-testid="`post-seo-status-${post.slug}`"
+            >
+              {{ (post.seo_title || '').trim() && (post.meta_description || '').trim() ? 'SEO OK' : 'Missing SEO' }}
+            </span>
+          </td>
           <td>{{ formatDate(post.published_at) }}</td>
           <td>{{ formatDate(post.updated_at) }}</td>
           <td style="white-space:nowrap">
