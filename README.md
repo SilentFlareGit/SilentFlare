@@ -6,9 +6,9 @@ high-level project map for future AI-assisted work.
 
 ## Project Overview
 
-- `apps/api`: FastAPI backend with public blog APIs, admin post CRUD APIs, authenticated cover image upload, and cover media listing/deletion for unused files.
-- `apps/blog`: Astro/Yukina public blog frontend. It reads published posts from the backend public APIs.
-- `apps/admin`: Vue 3 + Vite admin frontend with login, posts CRUD, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public view links, cover upload, media cleanup, and Playwright E2E coverage.
+- `apps/api`: FastAPI backend with public blog APIs, admin post CRUD APIs, post SEO fields, authenticated cover image upload, and cover media listing/deletion for unused files.
+- `apps/blog`: Astro/Yukina public blog frontend. It reads published posts from the backend public APIs and uses post SEO fields on detail pages.
+- `apps/admin`: Vue 3 + Vite admin frontend with login, posts CRUD, SEO title/meta description editing, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public view links, cover upload, media cleanup, and Playwright E2E coverage.
 - `docs/API_CONTRACT.md`: Current API contract for public and admin endpoints.
 - `.github/workflows/ci.yml`: GitHub Actions CI for admin build, API smoke test, blog build, and admin E2E.
 
@@ -142,15 +142,15 @@ pnpm run build
 GitHub Actions runs on push and pull request to `main`:
 
 - Admin build: installs `apps/admin` dependencies and runs `npm run build`.
-- API smoke test: installs `apps/api` dependencies, compiles backend code, starts Uvicorn, and runs `scripts/smoke_test.py`.
-- Blog build: installs `apps/blog` dependencies, starts the backend, and runs `pnpm run build`.
+- API smoke test: installs `apps/api` dependencies, compiles backend code, starts Uvicorn, and runs `scripts/smoke_test.py`, including post SEO field coverage.
+- Blog build: installs `apps/blog` dependencies, starts the backend, and runs `pnpm run build`, covering backend-fed detail metadata.
 - Admin E2E: runs the Playwright admin test suite with the backend available in CI, including cover upload, used media protection, and unused media deletion.
 
 ## Current Status
 
-- API provides public blog APIs, admin post CRUD, authenticated cover image upload, cover media listing, and unused cover deletion. Uploaded cover files are served under `/uploads/covers/...`.
-- Blog reads published posts from the backend.
-- Admin supports login, posts CRUD, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public View links, View Public Post links, cover upload, cover preview, posts-list cover thumbnails, and `/media` cleanup. On `/media`, used cover files show `Used` / `In use` and cannot be deleted; unused cover files show `Delete` and can be removed.
+- API provides public blog APIs, admin post CRUD, `seo_title` / `meta_description`, authenticated cover image upload, cover media listing, and unused cover deletion. Uploaded cover files are served under `/uploads/covers/...`.
+- Blog reads published posts from the backend. Post detail pages use `seo_title` for HTML title/meta/OG/Twitter title when present, falling back to `title`; descriptions use `meta_description`, falling back to `summary`.
+- Admin supports login, posts CRUD, SEO Title and Meta Description editing, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public View links, View Public Post links, cover upload, cover preview, posts-list cover thumbnails, and `/media` cleanup. On `/media`, used cover files show `Used` / `In use` and cannot be deleted; unused cover files show `Delete` and can be removed.
 - CI covers admin build, API smoke test, blog build, and admin Playwright E2E.
 
 ## Notes
