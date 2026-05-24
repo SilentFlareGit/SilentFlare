@@ -151,8 +151,8 @@ Requires authentication. Deletes an unused cover file. Files referenced by any
 post `cover_url` return `409 Conflict` and are not deleted.
 
 The admin `/media` page uses these cover APIs for cleanup: used files are shown
-as `Used` / `In use` without a delete action, while unused files expose a
-`Delete` button.
+as `Used` / `In use` and cannot be deleted, while unused files expose a
+`Delete` button and can be removed.
 
 Response:
 
@@ -305,3 +305,13 @@ Run the backend smoke test from `apps/api`:
 ```cmd
 python scripts\smoke_test.py --base-url http://127.0.0.1:8011
 ```
+
+Run admin E2E from `apps/admin` against that backend:
+
+```cmd
+set "VITE_API_BASE_URL=http://127.0.0.1:8011/api/v1" && npm run test:e2e
+```
+
+Expected result: Playwright reports the admin suite passing. The suite covers
+login, post CRUD, cover upload, used cover protection on `/media`, and unused
+cover deletion from `/media`.

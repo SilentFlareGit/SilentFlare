@@ -94,6 +94,14 @@ Use `http://127.0.0.1:8011/api/v1` if the backend is running on port `8011`.
 
 ## Validation Commands
 
+For local E2E, start the backend on port `8011` first to avoid common Windows
+port conflicts:
+
+```cmd
+cd apps\api
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8011
+```
+
 Admin build:
 
 ```cmd
@@ -108,7 +116,10 @@ cd apps\admin
 set "VITE_API_BASE_URL=http://127.0.0.1:8011/api/v1" && npm run test:e2e
 ```
 
-Local admin E2E requires the API backend running unless CI starts it for the job. Expected result: Playwright reports the admin spec passing, such as `1 passed`. The suite covers login, post CRUD, cover upload, used cover display on `/media` without a delete button, and unused cover deletion from `/media`.
+Local admin E2E requires the API backend running unless CI starts it for the
+job. Expected result: Playwright reports the admin suite passing. The suite
+covers login, post CRUD, cover upload, used cover display on `/media` without a
+delete action, and unused cover deletion from `/media`.
 
 Backend smoke test:
 
@@ -139,7 +150,7 @@ GitHub Actions runs on push and pull request to `main`:
 
 - API provides public blog APIs, admin post CRUD, authenticated cover image upload, cover media listing, and unused cover deletion. Uploaded cover files are served under `/uploads/covers/...`.
 - Blog reads published posts from the backend.
-- Admin supports login, posts CRUD, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public View links, View Public Post links, cover upload, cover preview, posts-list cover thumbnails, and `/media` cleanup. Used covers show `Used` / `In use` and cannot be deleted; unused covers show `Delete` and can be removed.
+- Admin supports login, posts CRUD, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public View links, View Public Post links, cover upload, cover preview, posts-list cover thumbnails, and `/media` cleanup. On `/media`, used cover files show `Used` / `In use` and cannot be deleted; unused cover files show `Delete` and can be removed.
 - CI covers admin build, API smoke test, blog build, and admin Playwright E2E.
 
 ## Notes
