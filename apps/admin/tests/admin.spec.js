@@ -268,6 +268,11 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await page.getByTestId('clear-filters').click()
     await expect(page.getByTestId('seo-filter')).toHaveValue('all')
 
+    await page.getByTestId('post-search').fill('playwright')
+    await expect(row).toBeVisible()
+    await page.getByTestId('post-search').fill(`SEO ${title}`)
+    await expect(row).toBeVisible()
+
     await page.getByTestId('post-search').fill(slug)
     await page.getByTestId(`edit-post-${slug}`).click()
     await expect(page.getByTestId('post-form')).toBeVisible()

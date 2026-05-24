@@ -11,7 +11,7 @@
         v-model="searchQuery"
         data-testid="post-search"
         type="text"
-        placeholder="Search by title, slug, or category…"
+        placeholder="Search title, slug, category, tags, summary, or SEO…"
         style="flex:1;min-width:200px;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px"
       />
       <select
@@ -169,12 +169,24 @@ const filteredPosts = computed(() => {
       // Status filter
       if (status !== 'all' && post.status !== status) return false
 
-      // Search filter (title, slug, category)
+      // Search filter
       if (query) {
         const title = (post.title || '').toLowerCase()
         const slug = (post.slug || '').toLowerCase()
         const category = (post.category || '').toLowerCase()
-        if (!title.includes(query) && !slug.includes(query) && !category.includes(query)) {
+        const summary = (post.summary || '').toLowerCase()
+        const tags = (Array.isArray(post.tags) ? post.tags.join(' ') : '').toLowerCase()
+        const seoTitle = (post.seo_title || '').toLowerCase()
+        const metaDesc = (post.meta_description || '').toLowerCase()
+        if (
+          !title.includes(query) &&
+          !slug.includes(query) &&
+          !category.includes(query) &&
+          !summary.includes(query) &&
+          !tags.includes(query) &&
+          !seoTitle.includes(query) &&
+          !metaDesc.includes(query)
+        ) {
           return false
         }
       }
