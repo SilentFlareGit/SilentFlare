@@ -44,9 +44,10 @@
     </div>
 
     <!-- Count summary -->
-    <div v-if="!loading" style="margin-bottom:12px;font-size:13px;color:#666">
+    <div v-if="!loading" data-testid="posts-count-summary" style="margin-bottom:12px;font-size:13px;color:#666">
       Showing {{ filteredPosts.length }} of {{ posts.length }} posts
       · {{ draftCount }} draft · {{ publishedCount }} published
+      · {{ seoOkCount }} SEO OK · {{ missingSeoCount }} missing SEO
     </div>
 
     <div v-if="error" class="error-msg">{{ error }}</div>
@@ -151,6 +152,8 @@ const seoFilter = ref('all')
 // --- Count helpers ---
 const draftCount = computed(() => posts.value.filter(p => p.status === 'draft').length)
 const publishedCount = computed(() => posts.value.filter(p => p.status === 'published').length)
+const seoOkCount = computed(() => posts.value.filter(p => (p.seo_title || '').trim() && (p.meta_description || '').trim()).length)
+const missingSeoCount = computed(() => posts.value.length - seoOkCount.value)
 
 // --- Clear filters ---
 function clearFilters() {

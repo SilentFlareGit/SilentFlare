@@ -249,6 +249,9 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
 
     await page.goto('/#/posts')
     await expect(page.getByTestId('posts-table')).toBeVisible()
+    const countSummary = page.getByTestId('posts-count-summary')
+    await expect(countSummary).toContainText('SEO OK')
+    await expect(countSummary).toContainText('missing SEO')
 
     await page.getByTestId('post-search').fill(slug)
     await expect(row).toBeVisible()
