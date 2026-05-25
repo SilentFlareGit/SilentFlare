@@ -171,6 +171,22 @@ Response:
 
 Requires authentication. Lists both draft and published posts.
 
+Optional query parameters:
+
+- `search`: case-insensitive match across title, slug, summary, category,
+  tags, `seo_title`, and `meta_description`.
+- `status`: `draft`, `published`, or `all`. Missing or `all` returns both
+  draft and published posts.
+- `seo`: `ok`, `missing`, or `all`. `ok` means both `seo_title` and
+  `meta_description` are non-empty after trim; `missing` means either field is
+  empty or whitespace.
+
+Example:
+
+```http
+GET /api/v1/admin/posts?status=published&seo=ok&search=release
+```
+
 Response:
 
 ```json

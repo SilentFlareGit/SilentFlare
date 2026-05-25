@@ -1,6 +1,7 @@
 import re
+from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
@@ -54,9 +55,47 @@ def published_at_for_status(status_value: str, published_at: str | None = None) 
     return ""
 
 
+def has_complete_seo(post: Post) -> bool:
+    return bool(post.seo_title.strip() and post.meta_description.strip())
+
+
+def matches_admin_search(post: Post, search: str) -> bool:
+    needle = search.strip().lower()
+    if not needle:
+        return True
+
+    values = [
+        post.title,
+        post.slug,
+        post.summary,
+        post.category,
+        post.seo_title,
+        post.meta_description,
+        *post.tags,
+    ]
+    return any(needle in value.lower() for value in values)
+
+
 @router.get("", response_model=AdminPostListResponse)
-def list_admin_posts(session: Session = Depends(get_session)) -> AdminPostListResponse:
-    posts = session.exec(select(Post).order_by(Post.id)).all()
+def list_admin_posts(
+    search: str | None = None,
+    status_filter: Literal["draft", "published", "all"] | None = Query(default=None, alias="status"),
+    seo: Literal["ok", "missing", "all"] | None = None,
+    session: Session = Depends(get_session),
+) -> AdminPostListResponse:
+    statement = select(Post).order_by(Post.id)
+    if status_filter in {PostStatus.draft.value, PostStatus.published.value}:
+        statement = statement.where(Post.status == status_filter)
+
+    posts = session.exec(statement).all()
+    if seo == "ok":
+        posts = [post for post in posts if has_complete_seo(post)]
+    elif seo == "missing":
+        posts = [post for post in posts if not has_complete_seo(post)]
+
+    if search is not None:
+        posts = [post for post in posts if matches_admin_search(post, search)]
+
     items = [AdminPostResponse.model_validate(post) for post in posts]
 
     return AdminPostListResponse(items=items, total=len(items))

@@ -34,8 +34,13 @@ class SmokeTest:
         print(message)
         self.failures.append(message)
 
-    def get_json(self, path: str, headers: dict[str, str] | None = None) -> tuple[int, dict]:
-        response = self.client.get(path, headers=headers)
+    def get_json(
+        self,
+        path: str,
+        headers: dict[str, str] | None = None,
+        params: dict[str, str] | None = None,
+    ) -> tuple[int, dict]:
+        response = self.client.get(path, headers=headers, params=params)
         try:
             payload = response.json()
         except ValueError:
@@ -59,6 +64,8 @@ class SmokeTest:
         suffix = uuid4().hex[:8]
         draft_slug = f"smoke-draft-{suffix}"
         published_slug = f"smoke-published-{suffix}"
+        missing_seo_slug = f"smoke-missing-seo-{suffix}"
+        filter_tag = f"filter-tag-{suffix}"
 
         try:
             self.test_health()
@@ -107,6 +114,21 @@ class SmokeTest:
                 },
                 "published",
             )
+            missing_seo = self.create_post(
+                {
+                    "title": f"Smoke Missing SEO {suffix}",
+                    "summary": "Smoke missing SEO summary.",
+                    "seo_title": "   ",
+                    "meta_description": "",
+                    "content_markdown": "# Smoke Missing SEO",
+                    "status": "draft",
+                    "category": "Tests",
+                    "tags": ["smoke", filter_tag],
+                    "slug": missing_seo_slug,
+                },
+                "draft",
+            )
+            self.test_admin_post_filters(draft, published, missing_seo, filter_tag)
             self.check_public_contains(
                 published_slug,
                 True,
@@ -122,6 +144,7 @@ class SmokeTest:
             self.test_update_changes_updated_at(draft)
             self.test_delete_removes_from_admin(draft)
             self.test_delete_removes_from_admin(published)
+            self.test_delete_removes_from_admin(missing_seo)
             self.test_docs()
         finally:
             self.cleanup()
@@ -300,6 +323,84 @@ class SmokeTest:
         status_code, payload = self.get_json("/api/v1/admin/posts", self.auth_headers())
         slugs = [item.get("slug") for item in payload.get("items", [])]
         self.check(name, status_code == 200 and (slug in slugs) is expected, str(slugs))
+
+    def test_admin_post_filters(self, draft: dict, published: dict, missing_seo: dict, filter_tag: str) -> None:
+        draft_slug = draft.get("slug")
+        published_slug = published.get("slug")
+        missing_seo_slug = missing_seo.get("slug")
+
+        status_code, payload = self.get_json(
+            "/api/v1/admin/posts",
+            self.auth_headers(),
+            {"status": "draft"},
+        )
+        draft_slugs = [item.get("slug") for item in payload.get("items", [])]
+        self.check(
+            "GET /api/v1/admin/posts supports status=draft",
+            status_code == 200
+            and draft_slug in draft_slugs
+            and missing_seo_slug in draft_slugs
+            and published_slug not in draft_slugs,
+            str(draft_slugs),
+        )
+
+        status_code, payload = self.get_json(
+            "/api/v1/admin/posts",
+            self.auth_headers(),
+            {"status": "published"},
+        )
+        published_slugs = [item.get("slug") for item in payload.get("items", [])]
+        self.check(
+            "GET /api/v1/admin/posts supports status=published",
+            status_code == 200 and published_slug in published_slugs and draft_slug not in published_slugs,
+            str(published_slugs),
+        )
+
+        status_code, payload = self.get_json("/api/v1/admin/posts", self.auth_headers(), {"seo": "ok"})
+        seo_ok_slugs = [item.get("slug") for item in payload.get("items", [])]
+        self.check(
+            "GET /api/v1/admin/posts supports seo=ok",
+            status_code == 200
+            and draft_slug in seo_ok_slugs
+            and published_slug in seo_ok_slugs
+            and missing_seo_slug not in seo_ok_slugs,
+            str(seo_ok_slugs),
+        )
+
+        status_code, payload = self.get_json("/api/v1/admin/posts", self.auth_headers(), {"seo": "missing"})
+        seo_missing_slugs = [item.get("slug") for item in payload.get("items", [])]
+        self.check(
+            "GET /api/v1/admin/posts supports seo=missing",
+            status_code == 200
+            and missing_seo_slug in seo_missing_slugs
+            and draft_slug not in seo_missing_slugs
+            and published_slug not in seo_missing_slugs,
+            str(seo_missing_slugs),
+        )
+
+        status_code, payload = self.get_json(
+            "/api/v1/admin/posts",
+            self.auth_headers(),
+            {"search": filter_tag},
+        )
+        tag_search_slugs = [item.get("slug") for item in payload.get("items", [])]
+        self.check(
+            "GET /api/v1/admin/posts search finds tag",
+            status_code == 200 and missing_seo_slug in tag_search_slugs,
+            str(tag_search_slugs),
+        )
+
+        status_code, payload = self.get_json(
+            "/api/v1/admin/posts",
+            self.auth_headers(),
+            {"search": str(published.get("seo_title", "")).lower()},
+        )
+        seo_title_search_slugs = [item.get("slug") for item in payload.get("items", [])]
+        self.check(
+            "GET /api/v1/admin/posts search finds seo_title",
+            status_code == 200 and published_slug in seo_title_search_slugs,
+            str(seo_title_search_slugs),
+        )
 
     def check_public_contains(
         self,
