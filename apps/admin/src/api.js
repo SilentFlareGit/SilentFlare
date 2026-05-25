@@ -50,8 +50,15 @@ export function login(username, password) {
 
 // ── Admin Posts ─────────────────────────────────────────
 
-export function listPosts() {
-  return apiFetch('/admin/posts')
+export function listPosts({ search, status, seo } = {}) {
+  const params = new URLSearchParams()
+  if (search && search.trim()) params.append('search', search.trim())
+  if (status && status !== 'all') params.append('status', status)
+  if (seo && seo !== 'all') params.append('seo', seo)
+  
+  const qs = params.toString()
+  const path = qs ? `/admin/posts?${qs}` : '/admin/posts'
+  return apiFetch(path)
 }
 
 export function getPost(id) {

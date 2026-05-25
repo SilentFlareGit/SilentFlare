@@ -45,7 +45,7 @@
 
     <!-- Count summary -->
     <div v-if="!loading" data-testid="posts-count-summary" style="margin-bottom:12px;font-size:13px;color:#666">
-      Showing {{ filteredPosts.length }} of {{ posts.length }} posts
+      Showing {{ posts.length }} posts
       · {{ draftCount }} draft · {{ publishedCount }} published
       · {{ seoOkCount }} SEO OK · {{ missingSeoCount }} missing SEO
     </div>
@@ -138,7 +138,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { listPosts, deletePost, updatePost } from '../api.js'
 
 const blogBaseUrl = import.meta.env.VITE_PUBLIC_BLOG_BASE_URL || 'http://localhost:4321'
@@ -165,56 +165,20 @@ function clearFilters() {
   seoFilter.value = 'all'
 }
 
-// --- Computed: filtered + sorted posts ---
+// --- Computed: sorted posts ---
 const filteredPosts = computed(() => {
-  const query = searchQuery.value.toLowerCase().trim()
-  const status = statusFilter.value
-
-  return posts.value
-    .filter((post) => {
-      // Status filter
-      if (status !== 'all' && post.status !== status) return false
-
-      // Search filter
-      if (query) {
-        const title = (post.title || '').toLowerCase()
-        const slug = (post.slug || '').toLowerCase()
-        const category = (post.category || '').toLowerCase()
-        const summary = (post.summary || '').toLowerCase()
-        const tags = (Array.isArray(post.tags) ? post.tags.join(' ') : '').toLowerCase()
-        const seoTitle = (post.seo_title || '').toLowerCase()
-        const metaDesc = (post.meta_description || '').toLowerCase()
-        if (
-          !title.includes(query) &&
-          !slug.includes(query) &&
-          !category.includes(query) &&
-          !summary.includes(query) &&
-          !tags.includes(query) &&
-          !seoTitle.includes(query) &&
-          !metaDesc.includes(query)
-        ) {
-          return false
-        }
-      }
-
-      // SEO filter
-      if (seoFilter.value !== 'all') {
-        const hasSeo = (post.seo_title || '').trim() && (post.meta_description || '').trim()
-        if (seoFilter.value === 'ok' && !hasSeo) return false
-        if (seoFilter.value === 'missing' && hasSeo) return false
-      }
-
-      return true
-    })
-    // Sort newest first (highest id first)
-    .sort((a, b) => b.id - a.id)
+  return [...posts.value].sort((a, b) => b.id - a.id)
 })
 
 async function load() {
   loading.value = true
   error.value = ''
   try {
-    const data = await listPosts()
+    const data = await listPosts({
+      search: searchQuery.value,
+      status: statusFilter.value,
+      seo: seoFilter.value
+    })
     posts.value = data.items || []
   } catch (e) {
     error.value = 'Failed to load posts.'
@@ -222,6 +186,19 @@ async function load() {
     loading.value = false
   }
 }
+
+let searchTimeout = null
+watch(searchQuery, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    load()
+  }, 350)
+})
+
+watch([statusFilter, seoFilter], () => {
+  clearTimeout(searchTimeout)
+  load()
+})
 
 // --- Quick status toggle ---
 async function handleToggleStatus(post) {
