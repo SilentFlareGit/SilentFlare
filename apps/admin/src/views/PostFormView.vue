@@ -131,9 +131,20 @@
         </div>
       </fieldset>
 
-      <button type="submit" class="btn btn-primary" :disabled="saving" data-testid="post-submit">
-        {{ saving ? 'Saving...' : (isEdit ? 'Update Post' : 'Create Post') }}
-      </button>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button type="submit" class="btn btn-primary" :disabled="saving" data-testid="post-submit">
+          {{ saving ? 'Saving...' : (isEdit ? 'Update Post' : 'Create Post') }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          :disabled="saving"
+          data-testid="post-submit-keep-editing"
+          @click="handleSubmit({ keepEditing: true })"
+        >
+          {{ saving ? 'Saving...' : (isEdit ? 'Update and keep editing' : 'Create and keep editing') }}
+        </button>
+      </div>
     </form>
   </div>
 </template>
@@ -268,7 +279,7 @@ onMounted(async () => {
   }
 })
 
-async function handleSubmit() {
+async function handleSubmit({ keepEditing = false } = {}) {
   error.value = ''
   success.value = ''
   saving.value = true
@@ -285,14 +296,24 @@ async function handleSubmit() {
   if (!payload.published_at) delete payload.published_at
 
   try {
+    let created
     if (isEdit.value) {
       await updatePost(postId.value, payload)
     } else {
-      await createPost(payload)
+      created = await createPost(payload)
     }
-    // Show success briefly, then navigate back
     success.value = isEdit.value ? 'Post updated successfully!' : 'Post created successfully!'
-    setTimeout(() => router.push({ name: 'Posts' }), 1500)
+
+    if (keepEditing) {
+      if (!isEdit.value && created?.id) {
+        // New post: navigate to its edit route
+        router.push(`/posts/${created.id}/edit`)
+      }
+      // Existing post: stay on the current route (no navigation)
+    } else {
+      // Original behavior: navigate back to Posts list
+      setTimeout(() => router.push({ name: 'Posts' }), 1500)
+    }
   } catch (e) {
     error.value = `Failed to ${isEdit.value ? 'update' : 'create'} post. ${e.message}`
   } finally {

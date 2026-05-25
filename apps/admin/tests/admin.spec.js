@@ -231,8 +231,14 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await page.getByTestId('post-meta-description').fill(`Meta description for ${title}`)
     uploadedCoverUrl = await uploadTinyCoverImage(page)
     await page.getByTestId('post-status').selectOption('draft')
-    await page.getByTestId('post-submit').click()
-    await expectSaveAndReturnToPosts(page, 'Post created successfully!')
+    
+    await page.getByTestId('post-submit-keep-editing').click()
+    await expect(page.locator('.success-msg')).toContainText('Post created successfully!')
+    await expect(page).toHaveURL(/#\/posts\/.+\/edit$/)
+    await expect(page.getByTestId('post-form')).toBeVisible()
+    
+    await page.goto('/#/posts')
+    await expect(page.getByTestId('posts-table')).toBeVisible({ timeout: 10_000 })
 
     const row = page.getByTestId(`post-row-${slug}`)
     await expect(row).toBeVisible()
@@ -308,8 +314,13 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     await expect(page.getByTestId('post-seo-title')).toHaveValue(`SEO ${title}`)
     await expect(page.getByTestId('post-meta-description')).toHaveValue(`Meta description for ${title}`)
     await page.getByTestId('post-summary').fill(updatedSummary)
-    await page.getByTestId('post-submit').click()
-    await expectSaveAndReturnToPosts(page, 'Post updated successfully!')
+    await page.getByTestId('post-submit-keep-editing').click()
+    await expect(page.locator('.success-msg')).toContainText('Post updated successfully!')
+    await expect(page).toHaveURL(/#\/posts\/.+\/edit$/)
+    await expect(page.getByTestId('post-form')).toBeVisible()
+    
+    await page.goto('/#/posts')
+    await expect(page.getByTestId('posts-table')).toBeVisible({ timeout: 10_000 })
     await expect(row).toBeVisible()
 
     await page.getByTestId('post-search').fill(slug)
