@@ -14,6 +14,7 @@ from app.routers.public_posts import router as public_posts_router
 
 app = FastAPI(title="SilentFlare Blog API")
 UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 app.add_middleware(
     CORSMiddleware,
