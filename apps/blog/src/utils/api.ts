@@ -11,6 +11,7 @@ export interface ApiPost {
 }
 
 const API_BASE = import.meta.env.PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
+const API_STRICT = import.meta.env.PUBLIC_API_STRICT === "true";
 
 export async function fetchApiPosts(): Promise<ApiPost[]> {
   try {
@@ -21,7 +22,8 @@ export async function fetchApiPosts(): Promise<ApiPost[]> {
     const data = await res.json();
     return data.items || [];
   } catch (e) {
-    console.warn("Failed to fetch posts from backend mock API, falling back to local posts.", e);
+    if (API_STRICT) throw e;
+    console.warn("Backend posts unavailable; using local posts fallback.");
     return [];
   }
 }
@@ -35,7 +37,8 @@ export async function fetchApiPostBySlug(slug: string): Promise<ApiPost | null> 
     }
     return await res.json();
   } catch (e) {
-    console.warn(`Failed to fetch post detail for slug ${slug} from backend mock API.`, e);
+    if (API_STRICT) throw e;
+    console.warn(`Backend post detail unavailable for ${slug}; using fallback.`);
     return null;
   }
 }
