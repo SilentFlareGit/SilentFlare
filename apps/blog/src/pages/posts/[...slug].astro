@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
 import { IdToSlug } from "../../utils/hash";
 import PostLayout from "../../layouts/PostLayout.astro";
 import { render } from "astro:content";
@@ -57,7 +58,7 @@ const metaDescription = entry.data.meta_description || entry.data.description ||
 
 let Content = null;
 if (!isApi) {
-  const rendered = await render(entry);
+  const rendered = await render(entry as CollectionEntry<"posts">);
   Content = rendered.Content;
 }
 ---
