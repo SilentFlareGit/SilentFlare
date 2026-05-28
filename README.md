@@ -6,9 +6,9 @@ high-level project map for future AI-assisted work.
 
 ## Project Overview
 
-- `apps/api`: FastAPI backend with public blog APIs, admin post CRUD APIs, post SEO fields, authenticated cover image upload, and cover media listing/deletion for unused files.
+- `apps/api`: FastAPI backend with public blog APIs, admin post CRUD APIs, server-side admin post filtering/pagination, post SEO fields, authenticated cover image upload, and cover media listing/deletion for unused files.
 - `apps/blog`: Astro/Yukina public blog frontend. It reads published posts from the backend public APIs, shows category/tag badges, and uses post SEO fields on detail pages.
-- `apps/admin`: Vue 3 + Vite admin frontend with login, posts CRUD, normal Save/Update, Save/Update and keep editing, internal post preview, SEO title/meta description editing, SEO status/filtering, expanded post search, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public view links, cover upload, media cleanup, and Playwright E2E coverage.
+- `apps/admin`: Vue 3 + Vite admin frontend with login, posts CRUD, normal Save/Update, Save/Update and keep editing, internal post preview, SEO title/meta description editing, server-side search/status/SEO filters, simple posts pagination, ByteMD editing, split Markdown preview, quick publish/unpublish, public view links, cover upload, media cleanup, and Playwright E2E coverage.
 - `docs/API_CONTRACT.md`: Current API contract for public and admin endpoints.
 - `.github/workflows/ci.yml`: GitHub Actions CI for admin build, API smoke test, blog build, and admin E2E.
 
@@ -118,9 +118,10 @@ set "VITE_API_BASE_URL=http://127.0.0.1:8011/api/v1" && npm run test:e2e
 
 Local admin E2E requires the API backend running unless CI starts it for the
 job. Expected result: Playwright reports the admin suite passing. The suite
-covers login, post CRUD, admin preview, cover upload, used cover display on
-`/media` without a delete action, unused cover deletion from `/media`, and the
-admin Save/Update and keep editing workflow.
+covers login, post CRUD, server-side post filters/pagination, admin preview,
+cover upload, used cover display on `/media` without a delete action, unused
+cover deletion from `/media`, and the admin Save/Update and keep editing
+workflow.
 
 Backend smoke test:
 
@@ -143,15 +144,15 @@ pnpm run build
 GitHub Actions runs on push and pull request to `main`:
 
 - Admin build: installs `apps/admin` dependencies and runs `npm run build`.
-- API smoke test: installs `apps/api` dependencies, compiles backend code, starts Uvicorn, and runs `scripts/smoke_test.py`, including post SEO field coverage.
+- API smoke test: installs `apps/api` dependencies, compiles backend code, starts Uvicorn, and runs `scripts/smoke_test.py`, including admin post filter and pagination coverage.
 - Blog build: installs `apps/blog` dependencies, starts the backend, and runs `pnpm run build`, covering backend-fed post detail metadata.
-- Admin E2E: runs the Playwright admin test suite with the backend available in CI, including post CRUD, Save/Update and keep editing, preview from the posts list and edit form, SEO status/filtering/search, cover upload, used media protection, and unused media deletion.
+- Admin E2E: runs the Playwright admin test suite with the backend available in CI, including post CRUD, Save/Update and keep editing, preview from the posts list and edit form, server-side post filtering/pagination, cover upload, used media protection, and unused media deletion.
 
 ## Current Status
 
-- API provides public blog APIs, admin post CRUD, `seo_title` / `meta_description`, authenticated cover image upload, cover media listing, and unused cover deletion. Uploaded cover files are served under `/uploads/covers/...`.
+- API provides public blog APIs, admin post CRUD, admin post list filters (`search`, `status`, `seo`) with pagination (`limit`, `offset`, `total` before pagination), `seo_title` / `meta_description`, authenticated cover image upload, cover media listing, and unused cover deletion. Uploaded cover files are served under `/uploads/covers/...`.
 - Blog reads published posts from the backend. Post lists and detail pages display category/tags as non-linked badges/spans. Post detail pages use `seo_title` for HTML title/meta/OG/Twitter title when present, falling back to `title`; descriptions use `meta_description`, falling back to `summary`.
-- Admin supports login, posts CRUD, normal Save/Update actions that return to the Posts list, and Save/Update and keep editing actions that keep the user in the editing workflow. For new posts, keep editing routes to the newly created post's edit page. Admin also supports internal post preview, SEO Title and Meta Description editing, SEO status indicators and filters, ByteMD editing, split Markdown preview, search/status filters, quick publish/unpublish, public View links, View Public Post links, cover upload, cover preview, posts-list cover thumbnails, and `/media` cleanup. Draft posts can be previewed inside admin without publishing; this preview is not public and does not expose drafts through `apps/blog`. `SEO OK` means both SEO fields are non-empty after trim; `Missing SEO` means either field is empty. Admin post search matches title, slug, category, summary, tags, `seo_title`, and `meta_description`. On `/media`, used cover files show `Used` / `In use` and cannot be deleted; unused cover files show `Delete` and can be removed.
+- Admin supports login, posts CRUD, normal Save/Update actions that return to the Posts list, and Save/Update and keep editing actions that keep the user in the editing workflow. For new posts, keep editing routes to the newly created post's edit page. Admin also supports internal post preview, SEO Title and Meta Description editing, server-side search/status/SEO filters, Previous/Next posts pagination with `Page N of M` and `Showing X of Y posts`, ByteMD editing, split Markdown preview, quick publish/unpublish, public View links, View Public Post links, cover upload, cover preview, posts-list cover thumbnails, and `/media` cleanup. Draft posts can be previewed inside admin without publishing; this preview is not public and does not expose drafts through `apps/blog`. `SEO OK` means both SEO fields are non-empty after trim; `Missing SEO` means either field is empty. Admin post search matches title, slug, category, summary, tags, `seo_title`, and `meta_description`. On `/media`, used cover files show `Used` / `In use` and cannot be deleted; unused cover files show `Delete` and can be removed.
 - CI covers admin build, API smoke test, blog build, and admin Playwright E2E.
 
 ## Notes
