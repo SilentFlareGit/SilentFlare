@@ -180,11 +180,18 @@ Optional query parameters:
 - `seo`: `ok`, `missing`, or `all`. `ok` means both `seo_title` and
   `meta_description` are non-empty after trim; `missing` means either field is
   empty or whitespace.
+- `limit`: optional page size from `1` to `100`. Missing returns all filtered
+  posts.
+- `offset`: number of filtered posts to skip when `limit` is provided. Defaults
+  to `0` and must be `0` or greater.
+
+`total` is the full filtered count before pagination; `items` contains the
+requested page.
 
 Example:
 
 ```http
-GET /api/v1/admin/posts?status=published&seo=ok&search=release
+GET /api/v1/admin/posts?status=published&seo=ok&search=release&limit=10&offset=20
 ```
 
 Response:

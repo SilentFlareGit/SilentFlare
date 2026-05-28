@@ -81,6 +81,8 @@ def list_admin_posts(
     search: str | None = None,
     status_filter: Literal["draft", "published", "all"] | None = Query(default=None, alias="status"),
     seo: Literal["ok", "missing", "all"] | None = None,
+    limit: int | None = Query(default=None, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     session: Session = Depends(get_session),
 ) -> AdminPostListResponse:
     statement = select(Post).order_by(Post.id)
@@ -96,9 +98,13 @@ def list_admin_posts(
     if search is not None:
         posts = [post for post in posts if matches_admin_search(post, search)]
 
+    total = len(posts)
+    if limit is not None:
+        posts = posts[offset : offset + limit]
+
     items = [AdminPostResponse.model_validate(post) for post in posts]
 
-    return AdminPostListResponse(items=items, total=len(items))
+    return AdminPostListResponse(items=items, total=total)
 
 
 @router.get("/{id}", response_model=AdminPostResponse)

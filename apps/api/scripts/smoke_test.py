@@ -38,7 +38,7 @@ class SmokeTest:
         self,
         path: str,
         headers: dict[str, str] | None = None,
-        params: dict[str, str] | None = None,
+        params: dict[str, str | int] | None = None,
     ) -> tuple[int, dict]:
         response = self.client.get(path, headers=headers, params=params)
         try:
@@ -128,7 +128,7 @@ class SmokeTest:
                 },
                 "draft",
             )
-            self.test_admin_post_filters(draft, published, missing_seo, filter_tag)
+            self.test_admin_post_filters(draft, published, missing_seo, filter_tag, suffix)
             self.check_public_contains(
                 published_slug,
                 True,
@@ -324,7 +324,14 @@ class SmokeTest:
         slugs = [item.get("slug") for item in payload.get("items", [])]
         self.check(name, status_code == 200 and (slug in slugs) is expected, str(slugs))
 
-    def test_admin_post_filters(self, draft: dict, published: dict, missing_seo: dict, filter_tag: str) -> None:
+    def test_admin_post_filters(
+        self,
+        draft: dict,
+        published: dict,
+        missing_seo: dict,
+        filter_tag: str,
+        search_term: str,
+    ) -> None:
         draft_slug = draft.get("slug")
         published_slug = published.get("slug")
         missing_seo_slug = missing_seo.get("slug")
@@ -400,6 +407,50 @@ class SmokeTest:
             "GET /api/v1/admin/posts search finds seo_title",
             status_code == 200 and published_slug in seo_title_search_slugs,
             str(seo_title_search_slugs),
+        )
+
+        status_code, payload = self.get_json(
+            "/api/v1/admin/posts",
+            self.auth_headers(),
+            {"search": search_term},
+        )
+        all_filtered_slugs = [item.get("slug") for item in payload.get("items", [])]
+        total = payload.get("total")
+        self.check(
+            "GET /api/v1/admin/posts search has several smoke posts",
+            status_code == 200
+            and total == len(all_filtered_slugs)
+            and {draft_slug, published_slug, missing_seo_slug}.issubset(set(all_filtered_slugs)),
+            str(payload),
+        )
+
+        status_code, payload = self.get_json(
+            "/api/v1/admin/posts",
+            self.auth_headers(),
+            {"search": search_term, "limit": 2},
+        )
+        limited_slugs = [item.get("slug") for item in payload.get("items", [])]
+        self.check(
+            "GET /api/v1/admin/posts supports limit",
+            status_code == 200
+            and len(limited_slugs) == 2
+            and len(limited_slugs) < len(all_filtered_slugs)
+            and payload.get("total") == total,
+            str(payload),
+        )
+
+        status_code, payload = self.get_json(
+            "/api/v1/admin/posts",
+            self.auth_headers(),
+            {"search": search_term, "limit": 2, "offset": 1},
+        )
+        offset_slugs = [item.get("slug") for item in payload.get("items", [])]
+        self.check(
+            "GET /api/v1/admin/posts supports offset",
+            status_code == 200
+            and offset_slugs == all_filtered_slugs[1:3]
+            and payload.get("total") == total,
+            str(payload),
         )
 
     def check_public_contains(
