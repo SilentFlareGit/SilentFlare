@@ -3,6 +3,8 @@ export interface ApiPost {
   title: string;
   slug: string;
   summary: string;
+  seo_title: string;
+  meta_description: string;
   cover_url: string;
   category: string;
   tags: string[];

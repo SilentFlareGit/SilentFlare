@@ -109,6 +109,9 @@ jobs:
       - name: Install blog dependencies
         working-directory: apps/blog
         run: pnpm install --frozen-lockfile
+      - name: Check blog types
+        working-directory: apps/blog
+        run: pnpm run check
       - name: Build blog
         working-directory: apps/blog
         env:
