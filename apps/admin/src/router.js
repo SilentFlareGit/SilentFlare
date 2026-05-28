@@ -21,7 +21,7 @@ const router = createRouter({
   routes,
 })
 
-// Navigation guard — redirect unauthenticated users to /login
+// Navigation guard - redirect unauthenticated users to /login
 router.beforeEach((to) => {
   if (to.name !== 'Login' && !isLoggedIn()) {
     return { name: 'Login' }
