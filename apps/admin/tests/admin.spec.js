@@ -278,6 +278,7 @@ test('admin can manage a draft post end to end', async ({ page, request }) => {
     const countSummary = page.getByTestId('posts-count-summary')
     await expect(countSummary).toContainText('SEO OK')
     await expect(countSummary).toContainText('missing SEO')
+    await expect(page.getByTestId('pagination-summary')).toContainText(/Page \d+ of \d+/)
 
     await page.getByTestId('post-search').fill(slug)
     await expect(row).toBeVisible()

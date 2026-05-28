@@ -45,7 +45,7 @@
 
     <!-- Count summary -->
     <div v-if="!loading" data-testid="posts-count-summary" style="margin-bottom:12px;font-size:13px;color:#666">
-      Showing {{ posts.length }} posts
+      Showing {{ posts.length }} of {{ totalPosts }} posts
       · {{ draftCount }} draft · {{ publishedCount }} published
       · {{ seoOkCount }} SEO OK · {{ missingSeoCount }} missing SEO
     </div>
@@ -134,6 +134,12 @@
         </tr>
       </tbody>
     </table>
+
+    <div v-if="!loading" class="pagination-controls" style="margin-top:20px;display:flex;align-items:center;gap:12px;justify-content:center">
+      <button class="btn btn-secondary" data-testid="pagination-prev" :disabled="currentPage <= 1" @click="prevPage">Previous</button>
+      <span data-testid="pagination-summary">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+      <button class="btn btn-secondary" data-testid="pagination-next" :disabled="currentPage >= totalPages" @click="nextPage">Next</button>
+    </div>
   </div>
 </template>
 
@@ -152,6 +158,12 @@ const searchQuery = ref('')
 const statusFilter = ref('all')
 const seoFilter = ref('all')
 
+// --- Pagination state ---
+const pageSize = ref(10)
+const currentPage = ref(1)
+const totalPosts = ref(0)
+const totalPages = computed(() => Math.ceil(totalPosts.value / pageSize.value) || 1)
+
 // --- Count helpers ---
 const draftCount = computed(() => posts.value.filter(p => p.status === 'draft').length)
 const publishedCount = computed(() => posts.value.filter(p => p.status === 'published').length)
@@ -163,6 +175,22 @@ function clearFilters() {
   searchQuery.value = ''
   statusFilter.value = 'all'
   seoFilter.value = 'all'
+  currentPage.value = 1
+}
+
+// --- Pagination methods ---
+function prevPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+    load()
+  }
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+    load()
+  }
 }
 
 // --- Computed: sorted posts ---
@@ -177,9 +205,12 @@ async function load() {
     const data = await listPosts({
       search: searchQuery.value,
       status: statusFilter.value,
-      seo: seoFilter.value
+      seo: seoFilter.value,
+      limit: pageSize.value,
+      offset: (currentPage.value - 1) * pageSize.value
     })
     posts.value = data.items || []
+    totalPosts.value = data.total || 0
   } catch (e) {
     error.value = 'Failed to load posts.'
   } finally {
@@ -191,12 +222,14 @@ let searchTimeout = null
 watch(searchQuery, () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
+    currentPage.value = 1
     load()
   }, 350)
 })
 
 watch([statusFilter, seoFilter], () => {
   clearTimeout(searchTimeout)
+  currentPage.value = 1
   load()
 })
 

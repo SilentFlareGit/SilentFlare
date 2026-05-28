@@ -50,11 +50,13 @@ export function login(username, password) {
 
 // ── Admin Posts ─────────────────────────────────────────
 
-export function listPosts({ search, status, seo } = {}) {
+export function listPosts({ search, status, seo, limit, offset } = {}) {
   const params = new URLSearchParams()
   if (search && search.trim()) params.append('search', search.trim())
   if (status && status !== 'all') params.append('status', status)
   if (seo && seo !== 'all') params.append('seo', seo)
+  if (limit !== undefined) params.append('limit', limit)
+  if (offset !== undefined) params.append('offset', offset)
   
   const qs = params.toString()
   const path = qs ? `/admin/posts?${qs}` : '/admin/posts'
