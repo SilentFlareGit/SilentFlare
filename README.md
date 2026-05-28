@@ -132,6 +132,13 @@ python scripts\smoke_test.py --base-url http://127.0.0.1:8011
 
 Run `scripts\smoke_test.py` from `apps\api`; its relative imports and paths assume that working directory.
 
+Blog type check:
+
+```cmd
+cd apps\blog
+pnpm run check
+```
+
 Blog build:
 
 ```cmd
@@ -145,7 +152,7 @@ GitHub Actions runs on push and pull request to `main`:
 
 - Admin build: installs `apps/admin` dependencies and runs `npm run build`.
 - API smoke test: installs `apps/api` dependencies, compiles backend code, starts Uvicorn, and runs `scripts/smoke_test.py`, including admin post filter and pagination coverage.
-- Blog build: installs `apps/blog` dependencies, starts the backend, and runs `pnpm run build`, covering backend-fed post detail metadata.
+- Blog build: installs `apps/blog` dependencies, starts the backend, runs `pnpm run check`, and builds with `PUBLIC_API_STRICT=true` so backend-fed post fetch is verified.
 - Admin E2E: runs the Playwright admin test suite with the backend available in CI, including post CRUD, Save/Update and keep editing, preview from the posts list and edit form, server-side post filtering/pagination, cover upload, used media protection, and unused media deletion.
 
 ## Current Status
@@ -160,6 +167,7 @@ GitHub Actions runs on push and pull request to `main`:
 - Blog build needs the backend API running.
 - Admin uses `VITE_API_BASE_URL` and `VITE_PUBLIC_BLOG_BASE_URL`.
 - Blog uses `PUBLIC_API_BASE_URL`.
+- Local blog builds keep API fallback behavior unless `PUBLIC_API_STRICT=true` is set.
 - Uploaded files are served by the API under `/uploads`, including cover images under `/uploads/covers/...`.
 - Local backend often uses `8011` to avoid Windows port conflicts.
 - Do not put real secrets into `.env.example` files or this README.
