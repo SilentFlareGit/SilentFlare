@@ -23,7 +23,7 @@
           data-testid="preview-current-post"
           style="font-size:13px;padding:6px 12px"
         >Preview</router-link>
-        <router-link to="/posts" class="btn btn-secondary">← Back</router-link>
+        <router-link to="/posts" class="btn btn-secondary">< Back</router-link>
       </div>
     </div>
     <p v-if="isEdit && form.status === 'draft'" class="draft-hint">
@@ -83,7 +83,7 @@
             data-testid="cover-upload-btn"
             @click="coverFileInput?.click()"
           >
-            {{ uploading ? 'Uploading…' : 'Upload Image' }}
+            {{ uploading ? 'Uploading...' : 'Upload Image' }}
           </button>
         </div>
         <p v-if="uploadError" class="error-msg" style="margin-top:4px;font-size:13px" data-testid="cover-upload-error">{{ uploadError }}</p>
@@ -218,7 +218,7 @@ function onSlugInput() {
   slugManuallyEdited.value = true
 }
 
-// Watch title changes — auto-fill slug only for new posts and only if user hasn't edited slug
+// Watch title changes - auto-fill slug only for new posts and only if user hasn't edited slug
 watch(
   () => form.value.title,
   (newTitle) => {
@@ -228,7 +228,7 @@ watch(
   }
 )
 
-// ── Cover image upload ──────────────────────────────────
+// -- Cover image upload --
 async function handleCoverUpload(event) {
   const file = event.target.files?.[0]
   if (!file) return

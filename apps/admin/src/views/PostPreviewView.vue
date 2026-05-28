@@ -3,7 +3,7 @@
     <div class="toolbar" style="margin-bottom: 24px">
       <h2 data-testid="preview-title">{{ post?.title || 'Loading...' }}</h2>
       <div style="display:flex;gap:8px;align-items:center">
-        <router-link :to="`/posts`" class="btn btn-secondary">← Posts</router-link>
+        <router-link :to="`/posts`" class="btn btn-secondary">< Posts</router-link>
         <router-link :to="`/posts/${postId}/edit`" class="btn btn-secondary" data-testid="preview-back-link">Edit Post</router-link>
       </div>
     </div>

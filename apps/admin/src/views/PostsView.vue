@@ -11,7 +11,7 @@
         v-model="searchQuery"
         data-testid="post-search"
         type="text"
-        placeholder="Search title, slug, category, tags, summary, or SEO…"
+        placeholder="Search title, slug, category, tags, summary, or SEO..."
         style="flex:1;min-width:200px;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px"
       />
       <select
@@ -46,8 +46,8 @@
     <!-- Count summary -->
     <div v-if="!loading" data-testid="posts-count-summary" style="margin-bottom:12px;font-size:13px;color:#666">
       Showing {{ posts.length }} of {{ totalPosts }} posts
-      · {{ draftCount }} draft · {{ publishedCount }} published
-      · {{ seoOkCount }} SEO OK · {{ missingSeoCount }} missing SEO
+      | {{ draftCount }} draft | {{ publishedCount }} published
+      | {{ seoOkCount }} SEO OK | {{ missingSeoCount }} missing SEO
     </div>
 
     <div v-if="error" class="error-msg">{{ error }}</div>
@@ -264,7 +264,7 @@ async function handleDelete(post) {
 }
 
 function formatDate(dt) {
-  if (!dt) return '—'
+  if (!dt) return '-'
   return new Date(dt).toLocaleDateString()
 }
 

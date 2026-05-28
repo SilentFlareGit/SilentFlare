@@ -1,4 +1,4 @@
-// API helper — all fetch calls go through here
+// API helper - all fetch calls go through here
 
 import { getToken, clearToken } from './auth.js'
 
@@ -39,7 +39,7 @@ export async function apiFetch(path, options = {}) {
   return res.json()
 }
 
-// ── Auth ────────────────────────────────────────────────
+// -- Auth --
 
 export function login(username, password) {
   return apiFetch('/auth/login', {
@@ -48,7 +48,7 @@ export function login(username, password) {
   })
 }
 
-// ── Admin Posts ─────────────────────────────────────────
+// -- Admin Posts --
 
 export function listPosts({ search, status, seo, limit, offset } = {}) {
   const params = new URLSearchParams()
@@ -87,11 +87,11 @@ export function deletePost(id) {
   })
 }
 
-// ── Uploads ─────────────────────────────────────────────
+// -- Uploads --
 
 /**
  * Upload a cover image. Uses FormData (not JSON) so we must
- * NOT set Content-Type — the browser sets the multipart boundary.
+ * NOT set Content-Type - the browser sets the multipart boundary.
  */
 export async function uploadCover(file) {
   const url = `${API_BASE}/admin/uploads/cover`
@@ -121,7 +121,7 @@ export async function uploadCover(file) {
   return res.json()
 }
 
-// ── Cover upload management ─────────────────────────────
+// -- Cover upload management --
 
 export function listCoverUploads() {
   return apiFetch('/admin/uploads/covers')

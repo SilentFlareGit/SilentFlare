@@ -1,13 +1,13 @@
 <template>
   <div>
     <div class="toolbar">
-      <h2>Media — Cover Images</h2>
+      <h2>Media - Cover Images</h2>
       <button class="btn btn-secondary" data-testid="media-refresh" @click="load">Refresh</button>
     </div>
 
     <div v-if="error" class="error-msg" data-testid="media-error">{{ error }}</div>
 
-    <div v-if="loading" style="text-align:center;padding:40px" data-testid="media-loading">Loading…</div>
+    <div v-if="loading" style="text-align:center;padding:40px" data-testid="media-loading">Loading...</div>
 
     <div v-else-if="files.length === 0" style="text-align:center;padding:40px;color:#999" data-testid="media-empty">
       No cover files found.
@@ -45,7 +45,7 @@
             <span v-if="file.used_by_post_ids && file.used_by_post_ids.length">
               {{ file.used_by_post_ids.join(', ') }}
             </span>
-            <span v-else style="color:#999">—</span>
+            <span v-else style="color:#999">-</span>
           </td>
           <td>
             <button
@@ -56,7 +56,7 @@
               :disabled="file._deleting"
               @click="handleDelete(file)"
             >
-              {{ file._deleting ? 'Deleting…' : 'Delete' }}
+              {{ file._deleting ? 'Deleting...' : 'Delete' }}
             </button>
             <span
               v-else
@@ -108,7 +108,7 @@ async function handleDelete(file) {
 }
 
 function formatSize(bytes) {
-  if (bytes == null) return '—'
+  if (bytes == null) return '-'
   if (bytes < 1024) return bytes + ' B'
   const kb = bytes / 1024
   if (kb < 1024) return kb.toFixed(1) + ' KB'
@@ -117,7 +117,7 @@ function formatSize(bytes) {
 }
 
 function formatDate(dt) {
-  if (!dt) return '—'
+  if (!dt) return '-'
   return new Date(dt).toLocaleDateString()
 }
 
